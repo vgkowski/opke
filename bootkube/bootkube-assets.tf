@@ -1,0 +1,125 @@
+data "template_file" "cloud_config_opts" {
+  template = "${format("\n        - --cloud-config=%s",var.cloud_config)}"
+}
+
+data "template_file" "cloud_config_volume_mount" {
+  template = "${format("\n        - name: cloud-config\n          mountPath: %s\n          readOnly: true",var.cloud_config)}"
+}
+
+data "template_file" "cloud_config_volume" {
+  template = "${format("\n      - name: cloud-config\n        hostPath:\n          path: %s",var.cloud_config)}"
+}
+
+# Self-hosted Kubernetes bootstrap-manifests
+resource "template_dir" "bootstrap-manifests" {
+  source_dir      = "${path.module}/resources/bootstrap-manifests"
+  destination_dir = "${var.asset_dir}/bootkube/bootstrap-manifests"
+
+  vars {
+    hyperkube_image = "${var.container_images["hyperkube"]}"
+    etcd_servers    = "${join(",", formatlist("https://%s:2379", var.etcd_servers))}"
+
+    pod_cidr                  = "${var.pod_cidr}"
+    service_cidr              = "${var.service_cidr}"
+  }
+}
+
+# Self-hosted Kubernetes manifests
+resource "template_dir" "manifests" {
+  source_dir      = "${path.module}/resources/manifests"
+  destination_dir = "${var.asset_dir}/bootkube/manifests"
+
+  vars {
+    hyperkube_image        = "${var.container_images["hyperkube"]}"
+    pod_checkpointer_image = "${var.container_images["pod_checkpointer"]}"
+    kubedns_image          = "${var.container_images["kubedns"]}"
+    kubedns_dnsmasq_image  = "${var.container_images["kubedns_dnsmasq"]}"
+    kubedns_sidecar_image  = "${var.container_images["kubedns_sidecar"]}"
+
+    etcd_servers = "${join(",", formatlist("https://%s:2379", var.etcd_servers))}"
+
+    cloud_provider      = "${var.cloud_provider}"
+    cloud_config_opts   = "${var.cloud_provider == "openstack" ? data.template_file.cloud_config_opts.rendered : "" }"
+    cloud_config_mount  = "${var.cloud_provider == "openstack" ? data.template_file.cloud_config_volume_mount.rendered : "" }"
+    cloud_config_volume = "${var.cloud_provider == "openstack" ? data.template_file.cloud_config_volume.rendered : "" }"
+
+    pod_cidr              = "${var.pod_cidr}"
+    service_cidr          = "${var.service_cidr}"
+    cluster_domain_suffix = "${var.cluster_domain_suffix}"
+    kube_dns_service_ip   = "${cidrhost(var.service_cidr, 10)}"
+
+    ca_cert            = "${base64encode(var.ca_certificate == "" ? join(" ", tls_self_signed_cert.kube-ca.*.cert_pem) : var.ca_certificate)}"
+    server             = "${format("https://%s:443", element(var.api_servers, 0))}"
+    apiserver_key      = "${base64encode(tls_private_key.apiserver.private_key_pem)}"
+    apiserver_cert     = "${base64encode(tls_locally_signed_cert.apiserver.cert_pem)}"
+    serviceaccount_pub = "${base64encode(tls_private_key.service-account.public_key_pem)}"
+    serviceaccount_key = "${base64encode(tls_private_key.service-account.private_key_pem)}"
+
+    etcd_ca_cert     = "${base64encode(tls_self_signed_cert.etcd-ca.cert_pem)}"
+    etcd_client_cert = "${base64encode(tls_locally_signed_cert.client.cert_pem)}"
+    etcd_client_key  = "${base64encode(tls_private_key.client.private_key_pem)}"
+  }
+}
+
+# Generated kubeconfig
+resource "local_file" "kubeconfig" {
+  content  = "${data.template_file.kubeconfig.rendered}"
+  filename = "${var.asset_dir}/bootkube/auth/kubeconfig"
+}
+
+# Generated kubeconfig with user-context
+resource "local_file" "user-kubeconfig" {
+  content  = "${data.template_file.user-kubeconfig.rendered}"
+  filename = "${var.asset_dir}/bootkube/auth/${var.cluster_name}-config"
+}
+
+data "template_file" "kubeconfig" {
+  template = "${file("${path.module}/resources/kubeconfig")}"
+
+  vars {
+    ca_cert      = "${base64encode(var.ca_certificate == "" ? join(" ", tls_self_signed_cert.kube-ca.*.cert_pem) : var.ca_certificate)}"
+    kubelet_cert = "${base64encode(tls_locally_signed_cert.kubelet.cert_pem)}"
+    kubelet_key  = "${base64encode(tls_private_key.kubelet.private_key_pem)}"
+    server       = "${format("https://%s:443", element(var.api_servers, 0))}"
+  }
+}
+
+data "template_file" "user-kubeconfig" {
+  template = "${file("${path.module}/resources/user-kubeconfig")}"
+
+  vars {
+    name         = "${var.cluster_name}"
+    ca_cert      = "${base64encode(var.ca_certificate == "" ? join(" ", tls_self_signed_cert.kube-ca.*.cert_pem) : var.ca_certificate)}"
+    kubelet_cert = "${base64encode(tls_locally_signed_cert.kubelet.cert_pem)}"
+    kubelet_key  = "${base64encode(tls_private_key.kubelet.private_key_pem)}"
+    server       = "${format("https://%s:443", element(var.api_servers, 0))}"
+  }
+}
+
+
+resource "template_dir" "flannel-manifests" {
+  count           = "${var.networking == "flannel" ? 1 : 0}"
+  source_dir      = "${path.module}/resources/flannel"
+  destination_dir = "${var.asset_dir}/bootkube/manifests-networking"
+
+  vars {
+    flannel_image     = "${var.container_images["flannel"]}"
+    flannel_cni_image = "${var.container_images["flannel_cni"]}"
+
+    pod_cidr = "${var.pod_cidr}"
+  }
+}
+
+resource "template_dir" "calico-manifests" {
+  count           = "${var.networking == "calico" ? 1 : 0}"
+  source_dir      = "${path.module}/resources/calico"
+  destination_dir = "${var.asset_dir}/bootkube/manifests-networking"
+
+  vars {
+    calico_image     = "${var.container_images["calico"]}"
+    calico_cni_image = "${var.container_images["calico_cni"]}"
+
+    network_mtu = "${var.network_mtu}"
+    pod_cidr    = "${var.pod_cidr}"
+  }
+}

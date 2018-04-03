@@ -1,0 +1,53 @@
+apiVersion: enterprises.upmc.com/v1
+kind: ElasticsearchCluster
+metadata:
+  name: vg-cluster
+spec:
+  kibana:
+    image: docker.elastic.co/kibana/kibana-oss:6.1.3
+  cerebro:
+    image: upmcenterprises/cerebro:0.6.8
+  elastic-search-image: upmcenterprises/docker-elasticsearch-kubernetes:6.1.3_0
+  client-node-replicas: 2
+  master-node-replicas: 2
+  data-node-replicas: 5
+  network-host: 0.0.0.0
+  data-volume-size: 10Gi
+  storage:
+    storage-class: cinder
+  java-options: "-Xms2048m -Xmx2048m"
+  resources:
+    requests:
+      memory: 4096Mi
+      cpu: '1'
+    limits:
+      memory: 4096Mi
+      cpu: '1'
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: kibana-vg-cluster
+spec:
+  ports:
+  - port: 443
+    targetPort: 5601
+  selector:
+    name: kibana-vg-cluster
+    component: elasticsearch-vg-cluster
+    role: kibana
+  type: LoadBalancer
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: cerebro-vg-cluster
+spec:
+  ports:
+  - port: 80
+    targetPort: 9000
+  selector:
+    name: cerebro-vg-cluster
+    component: elasticsearch-vg-cluster
+    role: cerebro
+  type: LoadBalancer
