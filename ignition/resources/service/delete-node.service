@@ -1,0 +1,9 @@
+[Unit]
+Description=Waiting to delete Kubernetes node on shutdown
+[Service]
+Type=oneshot
+RemainAfterExit=true
+ExecStart=/bin/true
+ExecStop=/etc/kubernetes/delete-node
+[Install]
+WantedBy=multi-user.target

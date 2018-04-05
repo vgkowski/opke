@@ -1,6 +1,6 @@
-# Secure copy etcd TLS assets and kubeconfig to controllers. Activates kubelet.service
+# Secure copy etcd TLS assets and kubeconfig to controllers. Activates kubelet-controller.service
 resource "null_resource" "copy-secrets" {
-  depends_on = ["module.bootkube"]
+  depends_on = ["module.etcd"]
   count      = "${var.controller_count}"
 
   connection {
@@ -17,37 +17,37 @@ resource "null_resource" "copy-secrets" {
   }
 
   provisioner "file" {
-    content     = "${module.bootkube.etcd_ca_cert}"
+    content     = "${module.etcd.ca_cert}"
     destination = "$HOME/etcd-client-ca.crt"
   }
 
   provisioner "file" {
-    content     = "${module.bootkube.etcd_client_cert}"
+    content     = "${module.etcd.client_cert}"
     destination = "$HOME/etcd-client.crt"
   }
 
   provisioner "file" {
-    content     = "${module.bootkube.etcd_client_key}"
+    content     = "${module.etcd.client_key}"
     destination = "$HOME/etcd-client.key"
   }
 
   provisioner "file" {
-    content     = "${module.bootkube.etcd_server_cert}"
+    content     = "${module.etcd.server_cert}"
     destination = "$HOME/etcd-server.crt"
   }
 
   provisioner "file" {
-    content     = "${module.bootkube.etcd_server_key}"
+    content     = "${module.etcd.server_key}"
     destination = "$HOME/etcd-server.key"
   }
 
   provisioner "file" {
-    content     = "${module.bootkube.etcd_peer_cert}"
+    content     = "${module.etcd.peer_cert}"
     destination = "$HOME/etcd-peer.crt"
   }
 
   provisioner "file" {
-    content     = "${module.bootkube.etcd_peer_key}"
+    content     = "${module.etcd.peer_key}"
     destination = "$HOME/etcd-peer.key"
   }
 
@@ -88,8 +88,32 @@ resource "null_resource" "bootkube-start" {
 
   provisioner "remote-exec" {
     inline = [
+      "chmod +x /home/core/assets/bootkube-start",
       "sudo mv /home/core/assets /opt/bootkube",
-      "sudo systemctl start bootkube",
+    ]
+  }
+}
+
+# Secure copy addons assets to ONE controller and start addons to install them.
+resource "null_resource" "addons-start" {
+  depends_on = ["null_resource.bootkube-start","module.addons", "null_resource.copy-secrets"]
+
+  connection {
+    type    = "ssh"
+    host    = "${element(openstack_networking_floatingip_v2.controller.*.address, 0)}"
+    user    = "core"
+    timeout = "15m"
+    private_key = "${tls_private_key.core.private_key_pem}"
+  }
+
+  provisioner "file" {
+    source      = "${var.asset_dir}/addons"
+    destination = "$HOME/assets"
+  }
+
+  provisioner "remote-exec" {
+    inline = [
+      "sudo mv /home/core/assets /opt/addons",
     ]
   }
 }

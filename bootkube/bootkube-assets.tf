@@ -55,9 +55,9 @@ resource "template_dir" "manifests" {
     serviceaccount_pub = "${base64encode(tls_private_key.service-account.public_key_pem)}"
     serviceaccount_key = "${base64encode(tls_private_key.service-account.private_key_pem)}"
 
-    etcd_ca_cert     = "${base64encode(tls_self_signed_cert.etcd-ca.cert_pem)}"
-    etcd_client_cert = "${base64encode(tls_locally_signed_cert.client.cert_pem)}"
-    etcd_client_key  = "${base64encode(tls_private_key.client.private_key_pem)}"
+    etcd_ca_cert     = "${base64encode(var.etcd_ca)}"
+    etcd_client_cert = "${base64encode(var.etcd_client_cert)}"
+    etcd_client_key  = "${base64encode(var.etcd_client_key)}"
   }
 }
 
@@ -122,4 +122,21 @@ resource "template_dir" "calico-manifests" {
     network_mtu = "${var.network_mtu}"
     pod_cidr    = "${var.pod_cidr}"
   }
+}
+
+data "template_file" "bootkube_path" {
+  template = "${file("${path.module}/resources/bootkube.path")}"
+}
+
+data "template_file" "bootkube_service" {
+  template = "${file("${path.module}/resources/bootkube.service")}"
+}
+
+data "template_file" "bootkube_start" {
+  template = "${file("${path.module}/resources/bootkube-start")}"
+}
+
+resource "local_file" "bootkube_start" {
+  content  = "${data.template_file.bootkube_start.rendered}"
+  filename = "${var.asset_dir}/bootkube/bootkube-start"
 }
