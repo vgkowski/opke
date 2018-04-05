@@ -22,7 +22,7 @@ data "template_file" "worker_config" {
     tenant_id   = "${var.tenant_id}"
     domain_name = "${var.domain_name}"
     subnet_id   = "${openstack_networking_subnet_v2.subnet.id}"
-    floating_id = "${var.floating_id}"
+    floating_id = "${var.external_gateway_id}"
     ca_pem      = "${var.ca}"
   }
 }

@@ -118,11 +118,6 @@ variable "floating_ip_pool" {
   type        = "string"
 }
 
-variable "floating_id" {
-  description = "The pool ID to pick up floating ips"
-  type    = "string"
-}
-
 variable "lb_provider" {
   description = "The type of load balancer used"
   type        = "string"
