@@ -7,7 +7,7 @@ module "bootkube" {
   api_servers           = ["${format("%s.%s", var.cluster_name, var.openstack_dns_zone)}"]
   etcd_servers          = ["${data.template_file.etcd_hostname.*.rendered}"]
   etcd_ca               = "${module.etcd.ca_cert}"
-  etcd_client_cert      = "${module.etcd.client_key}"
+  etcd_client_cert      = "${module.etcd.client_cert}"
   etcd_client_key       = "${module.etcd.client_key}"
   asset_dir             = "${var.asset_dir}"
   networking            = "${var.networking}"
