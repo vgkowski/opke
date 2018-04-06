@@ -1,7 +1,0 @@
-[Unit]
-Description=Trigger for addons.service
-[Path]
-PathExists=/opt/addons/addons-start
-Unit=addons.service
-[Install]
-WantedBy=multi-user.target

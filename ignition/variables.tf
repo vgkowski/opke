@@ -22,18 +22,8 @@ variable "addons_service" {
   type        = "string"
 }
 
-variable "addons_path" {
-  description = "content of the addons systemd path"
-  type        = "string"
-}
-
 variable "bootkube_service" {
   description = "content of the bootkube systemd service"
-  type        = "string"
-}
-
-variable "bootkube_path" {
-  description = "content of the bootkube systemd path"
   type        = "string"
 }
 

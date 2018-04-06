@@ -13,7 +13,7 @@ data "template_file" "cloud_config_volume" {
 # Self-hosted Kubernetes bootstrap-manifests
 resource "template_dir" "bootstrap-manifests" {
   source_dir      = "${path.module}/resources/bootstrap-manifests"
-  destination_dir = "${var.asset_dir}/bootkube/bootstrap-manifests"
+  destination_dir = "${var.asset_dir}/bootkube/assets/bootstrap-manifests"
 
   vars {
     hyperkube_image = "${var.container_images["hyperkube"]}"
@@ -27,7 +27,7 @@ resource "template_dir" "bootstrap-manifests" {
 # Self-hosted Kubernetes manifests
 resource "template_dir" "manifests" {
   source_dir      = "${path.module}/resources/manifests"
-  destination_dir = "${var.asset_dir}/bootkube/manifests"
+  destination_dir = "${var.asset_dir}/bootkube/assets/manifests"
 
   vars {
     hyperkube_image        = "${var.container_images["hyperkube"]}"
@@ -64,13 +64,13 @@ resource "template_dir" "manifests" {
 # Generated kubeconfig
 resource "local_file" "kubeconfig" {
   content  = "${data.template_file.kubeconfig.rendered}"
-  filename = "${var.asset_dir}/bootkube/auth/kubeconfig"
+  filename = "${var.asset_dir}/bootkube/assets/auth/kubeconfig"
 }
 
 # Generated kubeconfig with user-context
 resource "local_file" "user-kubeconfig" {
   content  = "${data.template_file.user-kubeconfig.rendered}"
-  filename = "${var.asset_dir}/bootkube/auth/${var.cluster_name}-config"
+  filename = "${var.asset_dir}/bootkube/assets/auth/${var.cluster_name}-config"
 }
 
 data "template_file" "kubeconfig" {
@@ -100,7 +100,7 @@ data "template_file" "user-kubeconfig" {
 resource "template_dir" "flannel-manifests" {
   count           = "${var.networking == "flannel" ? 1 : 0}"
   source_dir      = "${path.module}/resources/flannel"
-  destination_dir = "${var.asset_dir}/bootkube/manifests-networking"
+  destination_dir = "${var.asset_dir}/bootkube/assets/manifests-networking"
 
   vars {
     flannel_image     = "${var.container_images["flannel"]}"
@@ -113,7 +113,7 @@ resource "template_dir" "flannel-manifests" {
 resource "template_dir" "calico-manifests" {
   count           = "${var.networking == "calico" ? 1 : 0}"
   source_dir      = "${path.module}/resources/calico"
-  destination_dir = "${var.asset_dir}/bootkube/manifests-networking"
+  destination_dir = "${var.asset_dir}/bootkube/assets/manifests-networking"
 
   vars {
     calico_image     = "${var.container_images["calico"]}"
@@ -122,10 +122,6 @@ resource "template_dir" "calico-manifests" {
     network_mtu = "${var.network_mtu}"
     pod_cidr    = "${var.pod_cidr}"
   }
-}
-
-data "template_file" "bootkube_path" {
-  template = "${file("${path.module}/resources/bootkube.path")}"
 }
 
 data "template_file" "bootkube_service" {

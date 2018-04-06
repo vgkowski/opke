@@ -124,19 +124,9 @@ data "ignition_systemd_unit" "addons" {
   content = "${var.addons_service}"
 }
 
-data "ignition_systemd_unit" "addons-path" {
-  name    = "addons.path"
-  content = "${var.addons_path}"
-}
-
 data "ignition_systemd_unit" "bootkube" {
   name    = "bootkube.service"
   content = "${var.bootkube_service}"
-}
-
-data "ignition_systemd_unit" "bootkube-path" {
-  name    = "bootkube.path"
-  content = "${var.bootkube_path}"
 }
 
 data "template_file" "delete-node-service" {

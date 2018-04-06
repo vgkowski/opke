@@ -46,16 +46,8 @@ output "addons" {
   value = "${data.ignition_systemd_unit.addons.id}"
 }
 
-output "addons-path" {
-  value = "${data.ignition_systemd_unit.addons-path.id}"
-}
-
 output "bootkube" {
   value = "${data.ignition_systemd_unit.bootkube.id}"
-}
-
-output "bootkube-path" {
-  value = "${data.ignition_systemd_unit.bootkube-path.id}"
 }
 
 output "delete-node-service" {

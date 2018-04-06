@@ -21,9 +21,7 @@ data "ignition_config" "controller-ignition" {
     "${module.ignition-controller.kubelet}",
     "${module.ignition-controller.update-ca-certs}",
     "${module.ignition-controller.addons}",
-    "${module.ignition-controller.addons-path}",
     "${module.ignition-controller.bootkube}",
-    "${module.ignition-controller.bootkube-path}",
     "${module.ignition-controller.docker}",
     "${module.ignition-controller.locksmithd}",
     "${element(module.ignition-controller.etcd-member,count.index)}"

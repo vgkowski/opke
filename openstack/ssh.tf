@@ -83,13 +83,14 @@ resource "null_resource" "bootkube-start" {
 
   provisioner "file" {
     source      = "${var.asset_dir}/bootkube"
-    destination = "$HOME/assets"
+    destination = "$HOME/bootkube"
   }
 
   provisioner "remote-exec" {
     inline = [
-      "chmod +x /home/core/assets/bootkube-start",
-      "sudo mv /home/core/assets /opt/bootkube",
+      "chmod +x /home/core/bootkube/bootkube-start",
+      "sudo mv /home/core/bootkube /opt/bootkube",
+      "sudo systemctl start bootkube",
     ]
   }
 }
@@ -108,12 +109,14 @@ resource "null_resource" "addons-start" {
 
   provisioner "file" {
     source      = "${var.asset_dir}/addons"
-    destination = "$HOME/assets"
+    destination = "$HOME/addons"
   }
 
   provisioner "remote-exec" {
     inline = [
-      "sudo mv /home/core/assets /opt/addons",
+      "chmod +x /home/core/addons/addons-start",
+      "sudo mv /home/core/addons /opt/addons",
+      "sudo systemctl start addons",
     ]
   }
 }

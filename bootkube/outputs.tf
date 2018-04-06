@@ -18,10 +18,6 @@ output "user-kubeconfig" {
   value = "${data.template_file.user-kubeconfig.rendered}"
 }
 
-output "bootkube_path" {
-  value = "${data.template_file.bootkube_path.rendered}"
-}
-
 output "bootkube_service" {
   value = "${data.template_file.bootkube_service.rendered}"
 }

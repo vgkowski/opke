@@ -18,10 +18,6 @@ resource "template_dir" "storage-class" {
   destination_dir = "${var.asset_dir}/addons/storage-class"
 }
 
-data "template_file" "addons_path" {
-  template = "${file("${path.module}/resources/addons.path")}"
-}
-
 data "template_file" "addons_service" {
   template = "${file("${path.module}/resources/addons.service")}"
 }
@@ -33,4 +29,17 @@ data "template_file" "addons_start" {
 resource "local_file" "addons_start" {
   content  = "${data.template_file.addons_start.rendered}"
   filename = "${var.asset_dir}/addons/addons-start"
+}
+
+data "template_file" "addons_wrapper" {
+  template = "${file("${path.module}/resources/addons-wrapper")}"
+
+  vars {
+    hyperkube_image = "${var.container_images["hyperkube"]}"
+  }
+}
+
+resource "local_file" "addons_wrapper" {
+  content  = "${data.template_file.addons_wrapper.rendered}"
+  filename = "${var.asset_dir}/addons/addons-wrapper"
 }
