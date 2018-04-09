@@ -17,11 +17,6 @@ variable "node_type" {
   type        = "string"
 }
 
-variable "addons_service" {
-  description = "content of the addons systemd service"
-  type        = "string"
-}
-
 variable "bootkube_service" {
   description = "content of the bootkube systemd service"
   type        = "string"

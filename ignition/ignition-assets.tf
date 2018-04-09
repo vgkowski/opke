@@ -119,11 +119,6 @@ data "ignition_systemd_unit" "locksmithd" {
   mask = true
 }
 
-data "ignition_systemd_unit" "addons" {
-  name    = "addons.service"
-  content = "${var.addons_service}"
-}
-
 data "ignition_systemd_unit" "bootkube" {
   name    = "bootkube.service"
   content = "${var.bootkube_service}"

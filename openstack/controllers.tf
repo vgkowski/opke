@@ -20,7 +20,6 @@ data "ignition_config" "controller-ignition" {
     "${module.ignition-controller.wait-for-dns}",
     "${module.ignition-controller.kubelet}",
     "${module.ignition-controller.update-ca-certs}",
-    "${module.ignition-controller.addons}",
     "${module.ignition-controller.bootkube}",
     "${module.ignition-controller.docker}",
     "${module.ignition-controller.locksmithd}",

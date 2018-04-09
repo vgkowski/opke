@@ -42,10 +42,6 @@ output "locksmithd" {
   value = "${data.ignition_systemd_unit.locksmithd.id}"
 }
 
-output "addons" {
-  value = "${data.ignition_systemd_unit.addons.id}"
-}
-
 output "bootkube" {
   value = "${data.ignition_systemd_unit.bootkube.id}"
 }

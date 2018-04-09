@@ -10,23 +10,23 @@ resource "openstack_compute_servergroup_v2" "worker_group" {
 data "ignition_config" "worker-ignition" {
   count = "${var.worker_count}"
   files = [
-    "${module.ignition-controller.kubelet-env}",
-    "${module.ignition-controller.max-user-watches}",
-    "${module.ignition-controller.kubeconfig}",
-    "${module.ignition-controller.delete-node-file}",
-    "${module.ignition-controller.cloud-ca}",
-    "${module.ignition-controller.cloud-config}"
+    "${module.ignition-worker.kubelet-env}",
+    "${module.ignition-worker.max-user-watches}",
+    "${module.ignition-worker.kubeconfig}",
+    "${module.ignition-worker.delete-node-file}",
+    "${module.ignition-worker.cloud-ca}",
+    "${module.ignition-worker.cloud-config}"
   ]
   systemd = [
-    "${module.ignition-controller.delete-node-service}",
-    "${module.ignition-controller.wait-for-dns}",
-    "${module.ignition-controller.kubelet}",
-    "${module.ignition-controller.update-ca-certs}",
-    "${module.ignition-controller.docker}",
-    "${module.ignition-controller.locksmithd}"
+    "${module.ignition-worker.delete-node-service}",
+    "${module.ignition-worker.wait-for-dns}",
+    "${module.ignition-worker.kubelet}",
+    "${module.ignition-worker.update-ca-certs}",
+    "${module.ignition-worker.docker}",
+    "${module.ignition-worker.locksmithd}"
   ]
   users = [
-    "${module.ignition-controller.core-user}",
+    "${module.ignition-worker.core-user}",
   ]
 }
 resource "openstack_compute_instance_v2" "worker_node" {

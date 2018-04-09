@@ -5,7 +5,6 @@ module "ignition-controller" {
   service_cidr = "${var.service_cidr}"
   cluster_domain_suffix = "${var.cluster_domain_suffix}"
   node_type = "controller"
-  addons_service = "${module.addons.addons_service}"
   bootkube_service = "${module.bootkube.bootkube_service}"
   etcd_dropin = "${module.etcd.dropin}"
   kubeconfig = "${module.bootkube.kubeconfig}"
@@ -21,7 +20,6 @@ module "ignition-worker" {
   service_cidr = "${var.service_cidr}"
   cluster_domain_suffix = "${var.cluster_domain_suffix}"
   node_type = "worker"
-  addons_service = ""
   bootkube_service = ""
   etcd_dropin = [""]
   kubeconfig = "${module.bootkube.kubeconfig}"

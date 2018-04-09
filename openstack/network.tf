@@ -54,7 +54,7 @@ resource "openstack_networking_port_v2" "worker" {
   count              = "${var.worker_count}"
   name               = "${var.cluster_name}_port_worker_${count.index}"
   network_id         = "${openstack_networking_network_v2.network.id}"
-  security_group_ids = ["${list(openstack_networking_secgroup_v2.k8s.id,openstack_networking_secgroup_v2.controller.id)}"]
+  security_group_ids = ["${list(openstack_networking_secgroup_v2.k8s.id,openstack_networking_secgroup_v2.worker.id)}"]
   admin_state_up     = "true"
 
   fixed_ip {
