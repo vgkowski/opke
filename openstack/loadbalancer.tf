@@ -3,7 +3,7 @@
 resource "openstack_lb_loadbalancer_v2" "controller_lb" {
   vip_subnet_id         = "${openstack_networking_subnet_v2.subnet.id}"
   name                  = "${var.cluster_name}_controller"
-  loadbalancer_provider = "${var.lb_provider}"
+  loadbalancer_provider = "${var.openstack_lb_provider}"
 }
 
 resource "openstack_lb_pool_v2" "controller_lb_pool" {
@@ -40,7 +40,7 @@ resource "openstack_lb_member_v2" "controller_lb_members" {
 
 
 resource "openstack_networking_floatingip_v2" "controller_loadbalancer" {
-  pool    = "${var.floating_ip_pool}"
+  pool    = "${var.openstack_floating_pool}"
   port_id = "${openstack_lb_loadbalancer_v2.controller_lb.vip_port_id}"
 }
 
@@ -49,7 +49,7 @@ resource "openstack_networking_floatingip_v2" "controller_loadbalancer" {
 resource "openstack_lb_loadbalancer_v2" "worker_lb" {
   vip_subnet_id         = "${openstack_networking_subnet_v2.subnet.id}"
   name                  = "${var.cluster_name}_worker"
-  loadbalancer_provider = "${var.lb_provider}"
+  loadbalancer_provider = "${var.openstack_lb_provider}"
 }
 
 resource "openstack_lb_pool_v2" "worker_lb_pool" {
@@ -102,6 +102,6 @@ resource "openstack_lb_member_v2" "worker_lb_members_https" {
 
 
 resource "openstack_networking_floatingip_v2" "worker_loadbalancer" {
-  pool    = "${var.floating_ip_pool}"
+  pool    = "${var.openstack_floating_pool}"
   port_id = "${openstack_lb_loadbalancer_v2.worker_lb.vip_port_id}"
 }

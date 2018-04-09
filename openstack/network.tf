@@ -1,7 +1,7 @@
 resource "openstack_networking_router_v2" "router" {
   name             = "${var.cluster_name}_router"
   admin_state_up   = "true"
-  external_gateway = "${var.external_gateway_id}"
+  external_gateway = "${var.openstack_external_gateway}"
 }
 
 resource "openstack_networking_network_v2" "network" {
@@ -45,7 +45,7 @@ resource "openstack_networking_port_v2" "controller" {
 
 resource "openstack_networking_floatingip_v2" "controller" {
   count = "${var.controller_count}"
-  pool  = "${var.floating_ip_pool}"
+  pool  = "${var.openstack_floating_pool}"
 }
 
 # worker
@@ -54,7 +54,7 @@ resource "openstack_networking_port_v2" "worker" {
   count              = "${var.worker_count}"
   name               = "${var.cluster_name}_port_worker_${count.index}"
   network_id         = "${openstack_networking_network_v2.network.id}"
-  security_group_ids = ["${list(openstack_networking_secgroup_v2.k8s.id,openstack_networking_secgroup_v2.controller.id)}"]
+  security_group_ids = ["${list(openstack_networking_secgroup_v2.k8s.id,openstack_networking_secgroup_v2.worker.id)}"]
   admin_state_up     = "true"
 
   fixed_ip {
@@ -72,5 +72,5 @@ resource "openstack_networking_port_v2" "worker" {
 
 resource "openstack_networking_floatingip_v2" "worker" {
   count = "${var.worker_count}"
-  pool  = "${var.floating_ip_pool}"
+  pool  = "${var.openstack_floating_pool}"
 }

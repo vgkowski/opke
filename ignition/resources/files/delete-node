@@ -1,0 +1,11 @@
+#!/bin/bash
+set -e
+exec /usr/bin/rkt run \
+  --trust-keys-from-https \
+  --volume config,kind=host,source=/etc/kubernetes \
+  --mount volume=config,target=/etc/kubernetes \
+  --insecure-options=image \
+  docker://gcr.io/google_containers/hyperkube:v1.9.3 \
+  --net=host \
+  --dns=host \
+  --exec=/kubectl -- --kubeconfig=/etc/kubernetes/kubeconfig delete node $(hostname)

@@ -1,0 +1,13 @@
+[Global]
+username=${user}
+password=${password}
+auth-url=${auth_url}
+tenant-id=${tenant_id}
+domain-name=${domain_name}
+[LoadBalancer]
+subnet-id=${subnet_id}
+floating-network-id=${floating_id}
+create-monitor=true
+monitor-delay=30s
+monitor-timeout=5s
+monitor-max-retries=3

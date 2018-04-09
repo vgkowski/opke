@@ -1,0 +1,11 @@
+[Unit]
+Description=Update CA certificates
+Before=kubelet.service
+[Service]
+User=root
+Type=oneshot
+RemainAfterExit=true
+ExecStart=/usr/sbin/update-ca-certificates
+[Install]
+RequiredBy=kubelet.service
+WantedBy=multi-user.target

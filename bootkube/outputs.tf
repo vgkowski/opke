@@ -18,34 +18,8 @@ output "user-kubeconfig" {
   value = "${data.template_file.user-kubeconfig.rendered}"
 }
 
-# etcd TLS assets
-
-output "etcd_ca_cert" {
-  value = "${tls_self_signed_cert.etcd-ca.cert_pem}"
-}
-
-output "etcd_client_cert" {
-  value = "${tls_locally_signed_cert.client.cert_pem}"
-}
-
-output "etcd_client_key" {
-  value = "${tls_private_key.client.private_key_pem}"
-}
-
-output "etcd_server_cert" {
-  value = "${tls_locally_signed_cert.server.cert_pem}"
-}
-
-output "etcd_server_key" {
-  value = "${tls_private_key.server.private_key_pem}"
-}
-
-output "etcd_peer_cert" {
-  value = "${tls_locally_signed_cert.peer.cert_pem}"
-}
-
-output "etcd_peer_key" {
-  value = "${tls_private_key.peer.private_key_pem}"
+output "bootkube_service" {
+  value = "${data.template_file.bootkube_service.rendered}"
 }
 
 # Some platforms may need to reconstruct the kubeconfig directly in user-data.

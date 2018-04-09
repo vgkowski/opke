@@ -1,4 +1,4 @@
-# Secure copy etcd TLS assets and kubeconfig to controllers. Activates kubelet.service
+# Secure copy etcd TLS assets and kubeconfig to controllers. Activates kubelet-controller.service
 resource "null_resource" "copy-controller-secrets" {
   count = "${length(var.controller_names)}"
 
@@ -66,7 +66,7 @@ resource "null_resource" "copy-controller-secrets" {
   }
 }
 
-# Secure copy kubeconfig to all workers. Activates kubelet.service
+# Secure copy kubeconfig to all workers. Activates kubelet-controller.service
 resource "null_resource" "copy-worker-secrets" {
   count = "${length(var.worker_names)}"
 

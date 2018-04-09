@@ -8,13 +8,28 @@ variable "api_servers" {
   type        = "list"
 }
 
+variable "asset_dir" {
+  description = "Path to a directory where generated assets should be placed (contains secrets)"
+  type        = "string"
+}
+
 variable "etcd_servers" {
   description = "List of URLs used to reach etcd servers."
   type        = "list"
 }
 
-variable "asset_dir" {
-  description = "Path to a directory where generated assets should be placed (contains secrets)"
+variable "etcd_ca" {
+  description = "CA of the ETCD cluster"
+  type        = "string"
+}
+
+variable "etcd_client_cert" {
+  description = "Client certificate for etcd"
+  type        = "string"
+}
+
+variable "etcd_client_key" {
+  description = "Client key for etcd"
   type        = "string"
 }
 

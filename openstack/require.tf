@@ -6,7 +6,6 @@ terraform {
 
 provider "openstack" {
   version  = "~> 1.1.0"
-  insecure = "${var.insecure_openstack_api}"
 }
 
 provider "local" {
