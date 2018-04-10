@@ -95,3 +95,28 @@ resource "null_resource" "bootkube-start" {
   }
 }
 
+# Secure copy addons assets to ONE controller and start addons to install them.
+resource "null_resource" "addons-start" {
+  depends_on = ["null_resource.bootkube-start","module.addons", "null_resource.copy-secrets"]
+
+  connection {
+    type    = "ssh"
+    host    = "${element(openstack_networking_floatingip_v2.controller.*.address, 0)}"
+    user    = "core"
+    timeout = "15m"
+    private_key = "${tls_private_key.core.private_key_pem}"
+  }
+
+  provisioner "file" {
+    source      = "${var.asset_dir}/addons"
+    destination = "$HOME/addons"
+  }
+
+  provisioner "remote-exec" {
+    inline = [
+      "chmod +x /home/core/addons/addons-start",
+      "sudo mv /home/core/addons /opt/addons",
+      "sudo systemctl start addons",
+    ]
+  }
+}
