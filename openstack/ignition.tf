@@ -11,6 +11,7 @@ module "ignition-controller" {
   cloud_config = "${data.template_file.cloud-config.rendered}"
   cloud_ca = "${var.openstack_ca}"
   ssh_authorized_key = "${tls_private_key.core.public_key_openssh}"
+  addons_service = "${module.addons.addons_service}"
 }
 
 module "ignition-worker" {
@@ -26,4 +27,5 @@ module "ignition-worker" {
   cloud_config = "${data.template_file.cloud-config.rendered}"
   cloud_ca = "${var.openstack_ca}"
   ssh_authorized_key = "${tls_private_key.core.public_key_openssh}"
+  addons_service = ""
 }

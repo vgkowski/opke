@@ -22,6 +22,11 @@ variable "bootkube_service" {
   type        = "string"
 }
 
+variable "addons_service" {
+  description = "content of the addons systemd service"
+  type        = "string"
+}
+
 variable "etcd_dropin" {
   description = "content of the etcd dropin"
   type        = "list"
