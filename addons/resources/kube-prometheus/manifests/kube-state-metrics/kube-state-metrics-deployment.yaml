@@ -15,7 +15,7 @@ spec:
         runAsUser: 65534
       containers:
       - name: kube-rbac-proxy-main
-        image: quay.io/brancz/kube-rbac-proxy:v0.2.0
+        image: ${rbac_proxy_image}
         args:
         - "--secure-listen-address=:8443"
         - "--upstream=http://127.0.0.1:8081/"
@@ -30,7 +30,7 @@ spec:
             memory: 40Mi
             cpu: 20m
       - name: kube-rbac-proxy-self
-        image: quay.io/brancz/kube-rbac-proxy:v0.2.0
+        image: ${rbac_proxy_image}
         args:
         - "--secure-listen-address=:9443"
         - "--upstream=http://127.0.0.1:8082/"
@@ -45,14 +45,14 @@ spec:
             memory: 40Mi
             cpu: 20m
       - name: kube-state-metrics
-        image: quay.io/coreos/kube-state-metrics:v1.2.0
+        image: ${kube_stat_metrics_image}
         args:
         - "--host=127.0.0.1"
         - "--port=8081"
         - "--telemetry-host=127.0.0.1"
         - "--telemetry-port=8082"
       - name: addon-resizer
-        image: gcr.io/google_containers/addon-resizer:1.0
+        image: ${addon_resizer_image}
         resources:
           limits:
             cpu: 100m

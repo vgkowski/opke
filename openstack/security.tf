@@ -28,7 +28,7 @@ resource "openstack_networking_secgroup_rule_v2" "flannel" {
   ethertype         = "IPv4"
   port_range_min    = 8472
   port_range_max    = 8472
-  protocol          = "tcp"
+  protocol          = "udp"
   remote_group_id   = "${openstack_networking_secgroup_v2.k8s.id}"
   security_group_id = "${openstack_networking_secgroup_v2.k8s.id}"
 }

@@ -130,6 +130,11 @@ wait_for_pods kube-system
 echo "Creating storage class"
 $KUBECTL apply -f storage-class/cinder.yaml
 
+echo "Creating Container Linux Update Operator (cluo)"
+$KUBECTL apply -f cluo/cluo-rbac.yaml
+$KUBECTL apply -f cluo/update-agent.yaml
+$KUBECTL apply -f cluo/update-operator.yaml
+
 # Creating resources
 echo "Creating ingress resources"
 $KUBECTL apply -f ingress/ingress-rbac.yaml

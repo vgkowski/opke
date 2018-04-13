@@ -30,3 +30,9 @@ Terraform automation to install Kubernetes  on premise (currently Openstack only
 `TF_VAR_openstack_domain_name=$OS_USER_DOMAIN_NAME \`
 
 `terraform apply ../../openstack/`
+
+# TODO
+
+* Migrate to Kubernetes 1.10
+* Use Secret for storing cloud provider config file (including Openstack password)
+* Switch Kubelet to dynamic config

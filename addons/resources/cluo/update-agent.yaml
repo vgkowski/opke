@@ -18,7 +18,7 @@ spec:
     spec:
       containers:
       - name: update-agent
-        image: quay.io/coreos/container-linux-update-operator:v0.6.0
+        image: ${cluo_image}
         command:
         - "/bin/update-agent"
         volumeMounts:
