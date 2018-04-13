@@ -1,6 +1,6 @@
 # Secure copy etcd TLS assets and kubeconfig to controllers. Activates kubelet-controller.service
 resource "null_resource" "copy-secrets" {
-  depends_on = ["module.etcd"]
+  depends_on = ["module.etcd","openstack_compute_instance_v2.controller_node"]
   count      = "${var.controller_count}"
 
   connection {

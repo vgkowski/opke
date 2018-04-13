@@ -1,17 +1,11 @@
-#!/bin/bash
-
+#!/bin/sh
 set -e
 
-if [ "$#" -ne "2" ]; then
-    echo "Usage: $0 kubeconfig assets_path"
-    exit 1
-fi
-
-KUBECONFIG="$1"
+export KUBECONFIG="$1"
 ASSETS_PATH="$2"
 
 # Setup API Authentication
-KUBECTL="/opt/bin/kubectl --kubeconfig=$KUBECONFIG"
+KUBECTL="/kubectl --kubeconfig=$KUBECONFIG"
 
 # Setup helper functions
 
@@ -48,7 +42,7 @@ wait_for_crd() {
   i=0
 
   echo "Waiting for CRD $2"
-  until $KUBECTL -n "$1" get customresourcedefinitions "$2"; do
+  until $KUBECTL -n "$1" get customresourcedefinition "$2"; do
     i=$((i+1))
     echo "CRD $2 not available yet, retrying in 5 seconds ($i)"
     sleep 5
@@ -56,27 +50,15 @@ wait_for_crd() {
   set -e
 }
 
-wait_for_nodes() {
+wait_for_tpr() {
   set +e
-  echo "Waiting for nodes $1"
-  while true; do
-    RUNNING=1
-    for i in $1
-    do
-      out=$($KUBECTL get nodes $i -o custom-columns=STATUS:.status.conditions[3].status)
-      stat=$(echo "$out"| grep -v '^True')
-      if [ -z "$stat" ]; then
-        echo "Node not available yet, waiting for 5 seconds"
-        RUNNING=0
-        break
-      fi
-    done
-    if [ $RUNNING = 0 ]; then
-      sleep 5
-      continue
-    else
-      return
-    fi
+  i=0
+
+  echo "Waiting for TPR $2"
+  until $KUBECTL -n "$1" get thirdpartyresources "$2"; do
+    i=$((i+1))
+    echo "TPR $2 not available yet, retrying in 5 seconds ($i)"
+    sleep 5
   done
   set -e
 }
@@ -114,6 +96,20 @@ wait_for_pods() {
   set -e
 }
 
+asset_cleanup() {
+  echo "Cleaning up installation assets"
+
+  # shellcheck disable=SC2034
+  for d in "manifests" "auth" "tectonic" "tls"; do
+      rm -rf "$${ASSETS_PATH:?}/$${d:?}/"*
+  done
+
+  # shellcheck disable=SC2034
+  for f in "bootkube.sh" "tectonic.sh" "tectonic-wrapper.sh"; do
+      rm -f "$${ASSETS_PATH:?}/$${f:?}"
+  done
+}
+
 # chdir into the assets path directory
 cd "$ASSETS_PATH"
 
@@ -130,8 +126,14 @@ set -e
 
 # wait for Kubernetes pods
 wait_for_pods kube-system
+
 echo "Creating storage class"
 $KUBECTL apply -f storage-class/cinder.yaml
+
+echo "Creating Container Linux Update Operator (cluo)"
+$KUBECTL apply -f cluo/cluo-rbac.yaml
+$KUBECTL apply -f cluo/update-agent.yaml
+$KUBECTL apply -f cluo/update-operator.yaml
 
 # Creating resources
 echo "Creating ingress resources"
@@ -140,6 +142,9 @@ $KUBECTL apply -f ingress/default-backend.yaml
 $KUBECTL apply -f ingress/ingress-controller.yaml
 echo "Creating dashboard app"
 $KUBECTL apply -f kube-dashboard/kube-dashboard.yaml
-
+echo "Creating kube-prometheus app"
+cd "$ASSETS_PATH"/kube-prometheus
+chmod +x ./deploy
+./deploy
 echo "Kube-apps installation is done"
 exit 0

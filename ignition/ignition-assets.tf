@@ -121,7 +121,14 @@ data "ignition_systemd_unit" "locksmithd" {
 
 data "ignition_systemd_unit" "bootkube" {
   name    = "bootkube.service"
+  enabled = false
   content = "${var.bootkube_service}"
+}
+
+data "ignition_systemd_unit" "addons" {
+  name    = "addons.service"
+  enabled = false
+  content = "${var.addons_service}"
 }
 
 data "template_file" "delete-node-service" {

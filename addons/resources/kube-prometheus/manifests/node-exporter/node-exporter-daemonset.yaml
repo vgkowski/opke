@@ -20,7 +20,7 @@ spec:
       hostNetwork: true
       hostPID: true
       containers:
-      - image: quay.io/prometheus/node-exporter:v0.15.2
+      - image: ${node_exporter_image}
         args:
         - "--web.listen-address=127.0.0.1:9101"
         - "--path.procfs=/host/proc"
@@ -41,7 +41,7 @@ spec:
           readOnly: true
           mountPath: /host/sys
       - name: kube-rbac-proxy
-        image: quay.io/brancz/kube-rbac-proxy:v0.2.0
+        image: ${rbac_proxy_image}
         args:
         - "--secure-listen-address=:9100"
         - "--upstream=http://127.0.0.1:9101/"
@@ -66,20 +66,4 @@ spec:
       - name: sys
         hostPath:
           path: /sys
----
-apiVersion: v1
-kind: Service
-metadata:
-  labels:
-    app: node-exporter
-    k8s-app: node-exporter
-  name: node-exporter
-spec:
-  type: ClusterIP
-  clusterIP: None
-  ports:
-  - name: https
-    port: 9100
-    protocol: TCP
-  selector:
-    app: node-exporter
+

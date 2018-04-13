@@ -46,6 +46,10 @@ output "bootkube" {
   value = "${data.ignition_systemd_unit.bootkube.id}"
 }
 
+output "addons" {
+  value = "${data.ignition_systemd_unit.addons.id}"
+}
+
 output "delete-node-service" {
   value = "${data.ignition_systemd_unit.delete-node.id}"
 }
