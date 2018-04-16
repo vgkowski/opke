@@ -1,5 +1,17 @@
 Terraform automation to install Kubernetes  on premise (currently Openstack only tested)
 
+# Functionalities
+
+* Self hosted multi master Kubernetes clusters deployed with Bootkube
+* Terraform apply Worker scale in/out
+* CoreOS Container Linux hosts with automatic and synchronized OS updates through the Container Linux Update Operator (CLUO)
+* Addons with
+  * Prometheus Operator
+  * Kubernetes cluster monitoring
+  * Kubernetes dashboard
+  * NGINX ingress controller
+  * Cinder storage class (for Openstack deployment)
+
 # Openstack requirements
 
 * Openstack components:
@@ -35,4 +47,4 @@ Terraform automation to install Kubernetes  on premise (currently Openstack only
 
 * Migrate to Kubernetes 1.10
 * Use Secret for storing cloud provider config file (including Openstack password)
-* Switch Kubelet to dynamic config
+* Switch Kubelet to dynamic config to avoid any adherence with OS configuration and files
