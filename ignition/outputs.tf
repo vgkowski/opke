@@ -42,6 +42,10 @@ output "locksmithd" {
   value = "${data.ignition_systemd_unit.locksmithd.id}"
 }
 
+output "update-engine" {
+  value = "${data.ignition_systemd_unit.update-engine.id}"
+}
+
 output "bootkube" {
   value = "${data.ignition_systemd_unit.bootkube.id}"
 }

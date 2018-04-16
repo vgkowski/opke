@@ -23,7 +23,8 @@ data "ignition_config" "worker-ignition" {
     "${module.ignition-worker.kubelet}",
     "${module.ignition-worker.update-ca-certs}",
     "${module.ignition-worker.docker}",
-    "${module.ignition-worker.locksmithd}"
+    "${module.ignition-worker.locksmithd}",
+    "${module.ignition-controller.update-engine}",
   ]
   users = [
     "${module.ignition-worker.core-user}",

@@ -23,8 +23,9 @@ data "ignition_config" "controller-ignition" {
     "${module.ignition-controller.bootkube}",
     "${module.ignition-controller.docker}",
     "${module.ignition-controller.locksmithd}",
+    "${module.ignition-controller.update-engine}",
     "${module.ignition-controller.addons}",
-    "${element(module.ignition-controller.etcd-member,count.index)}"
+    "${element(module.ignition-controller.etcd-member,count.index)}",
   ]
   users = [
     "${module.ignition-controller.core-user}",

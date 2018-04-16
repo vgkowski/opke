@@ -115,8 +115,15 @@ data "ignition_systemd_unit" "docker" {
 }
 
 data "ignition_systemd_unit" "locksmithd" {
-  name = "locksmithd.service"
-  mask = true
+  name    = "locksmithd.service"
+  mask    = true
+  enabled = false
+}
+
+data "ignition_systemd_unit" "update-engine" {
+  name    = "update-engine.service"
+  mask    = false
+  enabled = true
 }
 
 data "ignition_systemd_unit" "bootkube" {
