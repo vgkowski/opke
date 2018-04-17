@@ -68,10 +68,78 @@ resource "null_resource" "copy-secrets" {
   }
 }
 
+# Copy kubelet configuration and start the service on controller
+# This is required to manage updates (idempotent action)
+resource "null_resource" "kubelet_controller" {
+  depends_on = ["module.bootkube", "null_resource.copy-secrets"]
+  count = "${var.controller_count}"
+
+  triggers {
+    kubelet_env = "${module.bootkube.kubelet-env}"
+  }
+
+  connection {
+    type    = "ssh"
+    host    = "${element(openstack_networking_floatingip_v2.controller.*.address, count.index)}"
+    user    = "core"
+    timeout = "15m"
+    private_key = "${tls_private_key.core.private_key_pem}"
+  }
+
+  provisioner "file" {
+    source      = "${var.asset_dir}/kubelet"
+    destination = "$HOME"
+  }
+
+  provisioner "remote-exec" {
+    inline = [
+      "sudo mv /home/core/kubelet/kubelet.env /etc/kubernetes/kubelet.env",
+      "sudo systemctl restart kubelet",
+      "rm -Rf /home/core/kubelet",
+    ]
+  }
+}
+
+# Copy kubelet configuration and start the service on worker
+# This is required to manage updates (idempotent action)
+resource "null_resource" "kubelet_worker" {
+  depends_on = ["module.bootkube", "null_resource.copy-secrets"]
+  count = "${var.worker_count}"
+
+  triggers {
+    kubelet_env = "${module.bootkube.kubelet-env}"
+  }
+
+  connection {
+    type    = "ssh"
+    host    = "${element(openstack_networking_floatingip_v2.worker.*.address, count.index)}"
+    user    = "core"
+    timeout = "15m"
+    private_key = "${tls_private_key.core.private_key_pem}"
+  }
+
+  provisioner "file" {
+    source      = "${var.asset_dir}/kubelet"
+    destination = "$HOME"
+  }
+
+  provisioner "remote-exec" {
+    inline = [
+      "sudo mv /home/core/kubelet/kubelet.env /etc/kubernetes/kubelet.env",
+      "sudo systemctl restart kubelet",
+      "rm -Rf /home/core/kubelet",
+    ]
+  }
+}
+
 # Secure copy bootkube assets to ONE controller and start bootkube to perform
 # one-time self-hosted cluster bootstrapping.
 resource "null_resource" "bootkube-start" {
-  depends_on = ["module.bootkube", "null_resource.copy-secrets"]
+  depends_on = ["null_resource.kubelet_controller"]
+
+  triggers {
+    kubelet_env = "${module.bootkube.kubelet-env}"
+  }
 
   connection {
     type    = "ssh"
@@ -83,13 +151,15 @@ resource "null_resource" "bootkube-start" {
 
   provisioner "file" {
     source      = "${var.asset_dir}/bootkube"
-    destination = "$HOME/bootkube"
+    destination = "$HOME"
   }
 
   provisioner "remote-exec" {
     inline = [
       "chmod +x /home/core/bootkube/bootkube-start",
-      "sudo mv /home/core/bootkube /opt/bootkube",
+      "chmod +x /home/core/bootkube/kube-upgrade-wrapper",
+      "sudo mkdir -p /opt/bootkube",
+      "sudo mv /home/core/bootkube/* /opt/bootkube/",
       "sudo systemctl start bootkube",
     ]
   }
@@ -97,7 +167,7 @@ resource "null_resource" "bootkube-start" {
 
 # Secure copy addons assets to ONE controller and start addons to install them.
 resource "null_resource" "addons-start" {
-  depends_on = ["null_resource.bootkube-start","module.addons", "null_resource.copy-secrets"]
+  depends_on = ["null_resource.bootkube-start","module.addons"]
 
   connection {
     type    = "ssh"
@@ -109,14 +179,38 @@ resource "null_resource" "addons-start" {
 
   provisioner "file" {
     source      = "${var.asset_dir}/addons"
-    destination = "$HOME/addons"
+    destination = "$HOME"
   }
 
   provisioner "remote-exec" {
     inline = [
-      "chmod +x /home/core/addons/addons-start",
-      "sudo mv /home/core/addons /opt/addons",
+      "chmod +x /home/core/addons/addons-wrapper",
+      "sudo mkdir -p /opt/addons",
+      "sudo mv /home/core/addons/* /opt/addons/",
       "sudo systemctl start addons",
+    ]
+  }
+}
+
+# Update Kubernetes control plane with bootkube manifests to manage cluster upgrade (idempotent)
+resource "null_resource" "k8s-upgrade" {
+  depends_on = ["null_resource.bootkube-start","null_resource.addons-start","null_resource.kubelet_worker"]
+
+  triggers {
+    kubelet_env = "${module.bootkube.kubelet-env}"
+  }
+
+  connection {
+    type    = "ssh"
+    host    = "${element(openstack_networking_floatingip_v2.controller.*.address, 0)}"
+    user    = "core"
+    timeout = "15m"
+    private_key = "${tls_private_key.core.private_key_pem}"
+  }
+
+  provisioner "remote-exec" {
+    inline = [
+      "sudo systemctl start kube-upgrade",
     ]
   }
 }

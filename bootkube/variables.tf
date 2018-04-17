@@ -84,15 +84,32 @@ variable "container_images" {
   type        = "map"
 
   default = {
-    calico           = "quay.io/calico/node:v3.0.4"
-    calico_cni       = "quay.io/calico/cni:v2.0.1"
-    flannel          = "quay.io/coreos/flannel:v0.10.0-amd64"
-    flannel_cni      = "quay.io/coreos/flannel-cni:v0.3.0"
-    hyperkube        = "gcr.io/google_containers/hyperkube:v1.9.6"
-    kubedns          = "gcr.io/google_containers/k8s-dns-kube-dns-amd64:1.14.8"
-    kubedns_dnsmasq  = "gcr.io/google_containers/k8s-dns-dnsmasq-nanny-amd64:1.14.8"
-    kubedns_sidecar  = "gcr.io/google_containers/k8s-dns-sidecar-amd64:1.14.8"
-    pod_checkpointer = "quay.io/coreos/pod-checkpointer:3cd08279c564e95c8b42a0b97c073522d4a6b965"
+    calico           = "quay.io/calico/node"
+    calico_cni       = "quay.io/calico/cni"
+    flannel          = "quay.io/coreos/flannel"
+    flannel_cni      = "quay.io/coreos/flannel-cni"
+    hyperkube        = "gcr.io/google_containers/hyperkube"
+    kubedns          = "gcr.io/google_containers/k8s-dns-kube-dns-amd64"
+    kubedns_dnsmasq  = "gcr.io/google_containers/k8s-dns-dnsmasq-nanny-amd64"
+    kubedns_sidecar  = "gcr.io/google_containers/k8s-dns-sidecar-amd64"
+    pod_checkpointer = "quay.io/coreos/pod-checkpointer"
+  }
+}
+
+variable "versions" {
+  description = "Versions to use"
+  type        = "map"
+
+  default = {
+    calico           = "v3.0.4"
+    calico_cni       = "v2.0.1"
+    flannel          = "v0.10.0-amd64"
+    flannel_cni      = "v0.3.0"
+    hyperkube        = "v1.9.6"
+    kubedns          = "1.14.8"
+    kubedns_dnsmasq  = "1.14.8"
+    kubedns_sidecar  = "1.14.8"
+    pod_checkpointer = "3cd08279c564e95c8b42a0b97c073522d4a6b965"
   }
 }
 

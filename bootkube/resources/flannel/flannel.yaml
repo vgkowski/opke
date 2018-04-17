@@ -20,7 +20,7 @@ spec:
       serviceAccountName: flannel
       containers:
       - name: kube-flannel
-        image: ${flannel_image}
+        image: ${flannel_image}:${flannel_version}
         command: [ "/opt/bin/flanneld", "--ip-masq", "--kube-subnet-mgr", "--iface=$(POD_IP)"]
         securityContext:
           privileged: true
@@ -45,7 +45,7 @@ spec:
         - name: flannel-cfg
           mountPath: /etc/kube-flannel/
       - name: install-cni
-        image: ${flannel_cni_image}
+        image: ${flannel_cni_image}:${flannel_cni_version}
         command: ["/install-cni.sh"]
         env:
         - name: CNI_NETWORK_CONFIG

@@ -16,8 +16,9 @@ resource "template_dir" "bootstrap-manifests" {
   destination_dir = "${var.asset_dir}/bootkube/assets/bootstrap-manifests"
 
   vars {
-    hyperkube_image = "${var.container_images["hyperkube"]}"
-    etcd_servers    = "${join(",", formatlist("https://%s:2379", var.etcd_servers))}"
+    hyperkube_image   = "${var.container_images["hyperkube"]}"
+    hyperkube_version = "${var.versions["hyperkube"]}"
+    etcd_servers      = "${join(",", formatlist("https://%s:2379", var.etcd_servers))}"
 
     pod_cidr                  = "${var.pod_cidr}"
     service_cidr              = "${var.service_cidr}"
@@ -30,11 +31,16 @@ resource "template_dir" "manifests" {
   destination_dir = "${var.asset_dir}/bootkube/assets/manifests"
 
   vars {
-    hyperkube_image        = "${var.container_images["hyperkube"]}"
-    pod_checkpointer_image = "${var.container_images["pod_checkpointer"]}"
-    kubedns_image          = "${var.container_images["kubedns"]}"
-    kubedns_dnsmasq_image  = "${var.container_images["kubedns_dnsmasq"]}"
-    kubedns_sidecar_image  = "${var.container_images["kubedns_sidecar"]}"
+    hyperkube_image          = "${var.container_images["hyperkube"]}"
+    hyperkube_version        = "${var.versions["hyperkube"]}"
+    pod_checkpointer_image   = "${var.container_images["pod_checkpointer"]}"
+    pod_checkpointer_version = "${var.versions["pod_checkpointer"]}"
+    kubedns_image            = "${var.container_images["kubedns"]}"
+    kubedns_version          = "${var.versions["kubedns"]}"
+    kubedns_dnsmasq_image    = "${var.container_images["kubedns_dnsmasq"]}"
+    kubedns_dnsmasq_version  = "${var.versions["kubedns_dnsmasq"]}"
+    kubedns_sidecar_image    = "${var.container_images["kubedns_sidecar"]}"
+    kubedns_sidecar_version  = "${var.versions["kubedns_sidecar"]}"
 
     etcd_servers = "${join(",", formatlist("https://%s:2379", var.etcd_servers))}"
 
@@ -103,8 +109,10 @@ resource "template_dir" "flannel-manifests" {
   destination_dir = "${var.asset_dir}/bootkube/assets/manifests-networking"
 
   vars {
-    flannel_image     = "${var.container_images["flannel"]}"
-    flannel_cni_image = "${var.container_images["flannel_cni"]}"
+    flannel_image       = "${var.container_images["flannel"]}"
+    flannel_version     = "${var.versions["flannel"]}"
+    flannel_cni_image   = "${var.container_images["flannel_cni"]}"
+    flannel_cni_version = "${var.versions["flannel_cni"]}"
 
     pod_cidr = "${var.pod_cidr}"
   }
@@ -116,8 +124,10 @@ resource "template_dir" "calico-manifests" {
   destination_dir = "${var.asset_dir}/bootkube/assets/manifests-networking"
 
   vars {
-    calico_image     = "${var.container_images["calico"]}"
-    calico_cni_image = "${var.container_images["calico_cni"]}"
+    calico_image       = "${var.container_images["calico"]}"
+    calico_version     = "${var.versions["calico"]}"
+    calico_cni_image   = "${var.container_images["calico_cni"]}"
+    calico_cni_version = "${var.versions["calico_cni"]}"
 
     network_mtu = "${var.network_mtu}"
     pod_cidr    = "${var.pod_cidr}"

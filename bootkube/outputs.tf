@@ -22,6 +22,26 @@ output "bootkube_service" {
   value = "${data.template_file.bootkube_service.rendered}"
 }
 
+output "kubelet-env" {
+  value = "${data.template_file.kubelet_env.rendered}"
+}
+
+output "kubelet-controller-service" {
+  value = "${ data.template_file.kubelet_controller_service.rendered}"
+}
+
+output "kubelet-worker-service" {
+  value = "${ data.template_file.kubelet_worker_service.rendered}"
+}
+
+output "kube_upgrade_service" {
+  value = "${data.template_file.kube_upgrade_service.rendered}"
+}
+
+output "kube_upgrade" {
+  value = "${data.template_file.kube_upgrade.rendered}"
+}
+
 # Some platforms may need to reconstruct the kubeconfig directly in user-data.
 # That can't be done with the way template_file interpolates multi-line
 # contents so the raw components of the kubeconfig may be needed.

@@ -54,15 +54,6 @@ data "template_file" "addons_service" {
 
 data "template_file" "addons_start" {
   template = "${file("${path.module}/resources/addons-start")}"
-
-  vars {
-    kube_version = "${var.kube_version}"
-  }
-}
-
-resource "local_file" "addons_start" {
-  content  = "${data.template_file.addons_start.rendered}"
-  filename = "${var.asset_dir}/addons/addons-start"
 }
 
 data "template_file" "addons_wrapper" {

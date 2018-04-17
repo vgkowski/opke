@@ -10,21 +10,18 @@ resource "openstack_compute_servergroup_v2" "worker_group" {
 data "ignition_config" "worker-ignition" {
   count = "${var.worker_count}"
   files = [
-    "${module.ignition-worker.kubelet-env}",
     "${module.ignition-worker.max-user-watches}",
     "${module.ignition-worker.kubeconfig}",
-    "${module.ignition-worker.delete-node-file}",
     "${module.ignition-worker.cloud-ca}",
-    "${module.ignition-worker.cloud-config}"
+    "${module.ignition-worker.cloud-config}",
   ]
   systemd = [
-    "${module.ignition-worker.delete-node-service}",
     "${module.ignition-worker.wait-for-dns}",
-    "${module.ignition-worker.kubelet}",
     "${module.ignition-worker.update-ca-certs}",
     "${module.ignition-worker.docker}",
     "${module.ignition-worker.locksmithd}",
-    "${module.ignition-controller.update-engine}",
+    "${module.ignition-worker.update-engine}",
+    "${module.ignition-worker.kubelet}",
   ]
   users = [
     "${module.ignition-worker.core-user}",

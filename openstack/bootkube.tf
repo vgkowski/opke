@@ -17,4 +17,15 @@ module "bootkube" {
   cluster_domain_suffix = "${var.cluster_domain_suffix}"
   cloud_provider        = "openstack"
   cloud_config          = "/etc/kubernetes/cloud-config"
+  versions              = {
+    calico           = "v3.0.4"
+    calico_cni       = "v2.0.1"
+    flannel          = "v0.10.0-amd64"
+    flannel_cni      = "v0.3.0"
+    hyperkube        = "${var.kubernetes_version}"
+    kubedns          = "1.14.8"
+    kubedns_dnsmasq  = "1.14.8"
+    kubedns_sidecar  = "1.14.8"
+    pod_checkpointer = "3cd08279c564e95c8b42a0b97c073522d4a6b965"
+  }
 }

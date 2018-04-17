@@ -19,29 +19,12 @@ data "ignition_file" "kubeconfig" {
   }
 }
 
-data "template_file" "kubelet-env" {
-  template = "${file("${path.module}/resources/files/kubelet.env")}"
-}
-
-data "ignition_file" "kubelet-env" {
+data "ignition_file" "kube_upgrade" {
   filesystem = "root"
-  path = "/etc/kubernetes/kubelet.env"
-  mode = 0644
-  content {
-    content = "${data.template_file.kubelet-env.rendered}"
-  }
-}
-
-data "template_file" "delete-node-file" {
-  template = "${file("${path.module}/resources/files/delete-node")}"
-}
-
-data "ignition_file" "delete-node" {
-  filesystem = "root"
-  path = "/etc/kubernetes/delete-node"
+  path = "/etc/kubernetes/kube-upgrade"
   mode = 0744
   content {
-    content = "${data.template_file.delete-node-file.rendered}"
+    content = "${var.kube_upgrade}"
   }
 }
 
@@ -65,28 +48,19 @@ data "ignition_file" "cloud-ca" {
   }
 }
 
-data "template_file" "kubelet-controller-service" {
-  template = "${file("${path.module}/resources/service/kubelet-controller.service")}"
-
-  vars {
-    k8s_dns_service_ip    = "${cidrhost(var.service_cidr, 10)}"
-    cluster_domain_suffix = "${var.cluster_domain_suffix}"
-  }
-}
-
-data "template_file" "kubelet-worker-service" {
-  template = "${file("${path.module}/resources/service/kubelet-worker.service")}"
-
-  vars {
-    k8s_dns_service_ip    = "${cidrhost(var.service_cidr, 10)}"
-    cluster_domain_suffix = "${var.cluster_domain_suffix}"
+data "ignition_file" "addons-start" {
+  filesystem = "root"
+  path = "/etc/kubernetes/addons-start"
+  mode = 0644
+  content {
+    content = "${var.addons_start}"
   }
 }
 
 data "ignition_systemd_unit" "kubelet" {
   name    = "kubelet.service"
   enabled = true
-  content = "${var.node_type == "controller" ? data.template_file.kubelet-controller-service.rendered : data.template_file.kubelet-worker-service.rendered}"
+  content = "${var.kubelet_service}"
 }
 
 data "template_file" "update-ca-certs" {
@@ -138,13 +112,10 @@ data "ignition_systemd_unit" "addons" {
   content = "${var.addons_service}"
 }
 
-data "template_file" "delete-node-service" {
-  template = "${file("${path.module}/resources/service/delete-node.service")}"
-}
-
-data "ignition_systemd_unit" "delete-node" {
-  name    = "delete-node.service"
-  content = "${data.template_file.delete-node-service.rendered}"
+data "ignition_systemd_unit" "kube_upgrade" {
+  name    = "kube-upgrade.service"
+  enabled = false
+  content = "${var.kube_upgrade_service}"
 }
 
 data "ignition_systemd_unit" "etcd-member" {

@@ -27,7 +27,7 @@ spec:
           operator: Exists
       containers:
         - name: calico-node
-          image: ${calico_image}
+          image: ${calico_image}:${calico_version}
           env:
             # Use Kubernetes API as the backing datastore.
             - name: DATASTORE_TYPE
@@ -107,7 +107,7 @@ spec:
               readOnly: false
         # Install Calico CNI binaries and CNI network config file on nodes
         - name: install-cni
-          image: ${calico_cni_image}
+          image: ${calico_cni_image}:${calico_cni_version}
           command: ["/install-cni.sh"]
           env:
             # Name of the CNI config file to create on each node.

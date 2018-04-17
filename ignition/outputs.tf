@@ -6,12 +6,8 @@ output "kubeconfig" {
   value = "${data.ignition_file.kubeconfig.id}"
 }
 
-output "kubelet-env" {
-  value = "${data.ignition_file.kubelet-env.id}"
-}
-
-output "delete-node-file" {
-  value = "${data.ignition_file.delete-node.id}"
+output "kube-upgrade-file" {
+  value = "${data.ignition_file.kube_upgrade.id}"
 }
 
 output "cloud-config" {
@@ -54,8 +50,12 @@ output "addons" {
   value = "${data.ignition_systemd_unit.addons.id}"
 }
 
-output "delete-node-service" {
-  value = "${data.ignition_systemd_unit.delete-node.id}"
+output "addons-start" {
+  value = "${data.ignition_file.addons-start.id}"
+}
+
+output "kube-upgrade" {
+  value = "${data.ignition_systemd_unit.kube_upgrade.id}"
 }
 
 output "etcd-member" {

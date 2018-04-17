@@ -10,15 +10,15 @@ resource "openstack_compute_servergroup_v2" "controller_group" {
 data "ignition_config" "controller-ignition" {
   count = "${var.controller_count}"
   files = [
-    "${module.ignition-controller.kubelet-env}",
     "${module.ignition-controller.max-user-watches}",
     "${module.ignition-controller.kubeconfig}",
     "${module.ignition-controller.cloud-ca}",
-    "${module.ignition-controller.cloud-config}"
+    "${module.ignition-controller.cloud-config}",
+    "${module.ignition-controller.kube-upgrade-file}",
+    "${module.ignition-controller.addons-start}",
   ]
   systemd = [
     "${module.ignition-controller.wait-for-dns}",
-    "${module.ignition-controller.kubelet}",
     "${module.ignition-controller.update-ca-certs}",
     "${module.ignition-controller.bootkube}",
     "${module.ignition-controller.docker}",
@@ -26,6 +26,8 @@ data "ignition_config" "controller-ignition" {
     "${module.ignition-controller.update-engine}",
     "${module.ignition-controller.addons}",
     "${element(module.ignition-controller.etcd-member,count.index)}",
+    "${module.ignition-controller.kube-upgrade}",
+    "${module.ignition-controller.kubelet}",
   ]
   users = [
     "${module.ignition-controller.core-user}",

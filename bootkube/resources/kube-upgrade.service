@@ -1,0 +1,11 @@
+[Unit]
+Description=Upgrading self hosted Kubernetes
+[Service]
+Type=oneshot
+RemainAfterExit=true
+WorkingDirectory=/opt/bootkube
+User=root
+Group=root
+ExecStart=/usr/bin/bash /opt/bootkube/kube-upgrade-wrapper
+[Install]
+WantedBy=multi-user.target

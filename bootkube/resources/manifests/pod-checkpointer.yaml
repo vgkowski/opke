@@ -21,7 +21,7 @@ spec:
     spec:
       containers:
       - name: pod-checkpointer
-        image: ${pod_checkpointer_image}
+        image: ${pod_checkpointer_image}:${pod_checkpointer_version}
         command:
         - /checkpoint
         - --lock-file=/var/run/lock/pod-checkpointer.lock

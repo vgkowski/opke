@@ -36,7 +36,7 @@ spec:
               topologyKey: kubernetes.io/hostname
       containers:
       - name: kube-scheduler
-        image: ${hyperkube_image}
+        image: ${hyperkube_image}:${hyperkube_version}
         command:
         - ./hyperkube
         - scheduler
