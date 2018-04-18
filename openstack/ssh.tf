@@ -158,6 +158,7 @@ resource "null_resource" "bootkube-start" {
     inline = [
       "chmod +x /home/core/bootkube/bootkube-start",
       "chmod +x /home/core/bootkube/kube-upgrade-wrapper",
+      "sudo rm -Rf /opt/bootkube",
       "sudo mkdir -p /opt/bootkube",
       "sudo mv /home/core/bootkube/* /opt/bootkube/",
       "sudo systemctl start bootkube",

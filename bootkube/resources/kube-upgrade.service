@@ -3,7 +3,7 @@ Description=Upgrading self hosted Kubernetes
 [Service]
 Type=oneshot
 RemainAfterExit=true
-WorkingDirectory=/opt/bootkube
+WorkingDirectory=/opt/bootkube/assets
 User=root
 Group=root
 ExecStart=/usr/bin/bash /opt/bootkube/kube-upgrade-wrapper
