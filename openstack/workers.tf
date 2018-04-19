@@ -27,6 +27,7 @@ data "ignition_config" "worker-ignition" {
     "${module.ignition-worker.core-user}",
   ]
 }
+
 resource "openstack_compute_instance_v2" "worker_node" {
   count = "${var.worker_count}"
   name  = "${var.cluster_name}-worker${count.index}"

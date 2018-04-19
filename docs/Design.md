@@ -58,3 +58,5 @@ This module is a root module in charge of combining the other modules to provisi
 Please note that all parameters that can be common to multiple platforms are separated from each platform module at the root repo directory
 
 ### Global view
+
+![Image of terraform design](./opke.jpg)
