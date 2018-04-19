@@ -4,7 +4,7 @@ ConditionPathExists=!/opt/bootkube/init_bootkube.done
 [Service]
 Type=oneshot
 RemainAfterExit=true
-WorkingDirectory=/opt/bootkube
+WorkingDirectory=/opt/bootkube/assets
 ExecStart=/opt/bootkube/bootkube-start
 ExecStartPost=/bin/touch /opt/bootkube/init_bootkube.done
 [Install]

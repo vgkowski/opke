@@ -21,7 +21,7 @@ spec:
     spec:
       containers:
       - name: kube-apiserver
-        image: ${hyperkube_image}
+        image: ${hyperkube_image}:${hyperkube_version}
         command:
         - /hyperkube
         - apiserver

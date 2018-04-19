@@ -3,6 +3,12 @@ variable "cluster_name" {
   description = "Cluster name"
 }
 
+variable "kubernetes_version" {
+  type        = "string"
+  default     = "v1.9.6"
+  description = "Version of Kubernetes to deploy"
+}
+
 variable "controller_count" {
   type        = "string"
   default     = "1"

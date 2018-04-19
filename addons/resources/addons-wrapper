@@ -8,4 +8,4 @@ set -e
     --network=host \
     --entrypoint=/bin/sh \
     ${hyperkube_image} \
-    /assets/addons-start /etc/kubernetes/kubeconfig /assets
+    /etc/kubernetes/addons-start /etc/kubernetes/kubeconfig /assets

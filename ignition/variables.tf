@@ -22,8 +22,28 @@ variable "bootkube_service" {
   type        = "string"
 }
 
+variable "kubelet_service" {
+  description = "content of the kubelet systemd service"
+  type        = "string"
+}
+
 variable "addons_service" {
   description = "content of the addons systemd service"
+  type        = "string"
+}
+
+variable "addons_start" {
+  description = "content of the addons script"
+  type        = "string"
+}
+
+variable "kube_upgrade_service" {
+  description = "content of the kube-upgrade systemd service"
+  type        = "string"
+}
+
+variable "kube_upgrade" {
+  description = "content of the kube-upgrade script file"
   type        = "string"
 }
 

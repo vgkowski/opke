@@ -1,16 +1,18 @@
-Terraform automation to install Kubernetes  on premise (currently Openstack only tested)
+Terraform automation to manage Kubernetes clusters on premise (currently Openstack only tested)
 
 # Functionalities
 
 * Self hosted multi master Kubernetes clusters deployed with Bootkube
-* Terraform apply Worker scale in/out
-* CoreOS Container Linux hosts with automatic and synchronized OS updates through the Container Linux Update Operator (CLUO)
+* Worker scale in/out through Terraform variables
+* Kubernetes version updates through Terraform variables.Currently the Kubelet restarts are not synchronized
+* CoreOS Container Linux hosts with automatic OS updates without K8S service interruption through the Container Linux Update Operator (CLUO)
 * Addons with
   * Prometheus Operator
-  * Kubernetes cluster monitoring
+  * Pre-configured Kubernetes cluster monitoring
   * Kubernetes dashboard
   * NGINX ingress controller
   * Cinder storage class (for Openstack deployment)
+  * Openstack LBaaS service type (for Openstack deployment)
 
 # Openstack requirements
 
@@ -19,10 +21,11 @@ Terraform automation to install Kubernetes  on premise (currently Openstack only
   * Neutron network with LBaaS
   * Designate: can be replaced by static IPs
   * Cinder for K8S storage class integration
-  * Swift
 * Internet access from your Openstack to download Kubernetes Hyperkube docker images
 
-# Creating K8S clusters on Openstack
+# Usage on Openstack
+
+## Creation
 
 1. Ensure you meet all the requirements
 1. Source your Openstack rc file downloaded from Horizon webUI
@@ -42,6 +45,20 @@ Terraform automation to install Kubernetes  on premise (currently Openstack only
 `TF_VAR_openstack_domain_name=$OS_USER_DOMAIN_NAME \`
 
 `terraform apply ../../openstack/`
+
+## Scale in/out
+
+1. Change the `worker_count` parameter in your configuration file
+2. Reapply the Terraform
+
+## K8S version update
+
+This version has only been tested with K8S v1.9.x
+
+It's only safe to automatically upgrade Kubernetes within minor versions.
+
+1. Change the `kubernetes_version` parameter in your configuration file
+2. Reapply the Terraform
 
 # TODO
 

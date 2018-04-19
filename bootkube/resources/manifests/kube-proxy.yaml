@@ -19,7 +19,7 @@ spec:
         - ./hyperkube
         - proxy
         - --config=/var/lib/kube-proxy/config.conf
-        image: ${hyperkube_image}
+        image: ${hyperkube_image}:${hyperkube_version}
         imagePullPolicy: IfNotPresent
         name: kube-proxy
         securityContext:
