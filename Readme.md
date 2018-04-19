@@ -21,7 +21,6 @@ Terraform automation to manage Kubernetes clusters on premise (currently Opensta
   * Neutron network with LBaaS
   * Designate: can be replaced by static IPs
   * Cinder for K8S storage class integration
-  * Swift
 * Internet access from your Openstack to download Kubernetes Hyperkube docker images
 
 # Usage on Openstack
