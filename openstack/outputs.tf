@@ -1,7 +1,11 @@
-output "kubeconfig" {
-  value = "${module.bootkube.kubeconfig}"
+output "controllers_fip" {
+  value = "${join(", ", openstack_networking_floatingip_v2.controller.*.address)}"
 }
 
-output "ip" {
-  value = "${concat(openstack_networking_floatingip_v2.controller.*.address,openstack_networking_floatingip_v2.worker.*.address)}"
+output "workers_fip" {
+  value = "${join(", ", openstack_networking_floatingip_v2.worker.*.address)}"
+}
+
+output "kubeconfig" {
+  value = "\n${module.bootkube.kubeconfig}"
 }
