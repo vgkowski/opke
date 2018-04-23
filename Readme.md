@@ -44,7 +44,7 @@ Terraform automation to manage Kubernetes clusters on premise (currently Opensta
 
 `TF_VAR_openstack_domain_name=$OS_USER_DOMAIN_NAME \`
 
-`terraform apply ../../openstack/`
+`terraform apply ../../modules/openstack/`
 
 ## Scale in/out
 
