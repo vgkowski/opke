@@ -146,5 +146,9 @@ echo "Creating kube-prometheus app"
 cd "$ASSETS_PATH"/kube-prometheus
 chmod +x ./deploy
 ./deploy
+echo "Creating opke etcd"
+cd "$ASSETS_PATH"/opke
+chmod +x ./deploy
+./deploy
 echo "Kube-apps installation is done"
 exit 0
