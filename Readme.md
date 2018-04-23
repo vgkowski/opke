@@ -65,3 +65,7 @@ It's only safe to automatically upgrade Kubernetes within minor versions.
 * Migrate to Kubernetes 1.10
 * Use Secret for storing cloud provider config file (including Openstack password)
 * Switch Kubelet to dynamic config to avoid any adherence with OS configuration and files
+
+# Documentation
+
+[Design](./docs/Design.md)
