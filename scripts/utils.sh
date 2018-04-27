@@ -1,12 +1,127 @@
 #!/bin/bash
 
-set -x
 set -e
+set -x
 
 function error() {
-	echo $1
+	echo "error: $1"
 	exit 1
 }
+
+function get_flavor() {
+    [ -z ${FLAVOR} ] && error "missing FLAVOR environment variable"
+    export TFVARS="${DIR}/flavors/${FLAVOR}.tfvars"
+    [ -f ${TFVARS} ] || error "${TFVARS} does not exist"
+}
+
+function get_etcd() {
+    [ -z ${ETCD_IP} ] && error "missing ETCD_IP environment variable"
+    ETCDCTL_API=3 etcdctl --endpoints=http://$ETCD_IP:2379 member list >/dev/null 2>&1 || error "etcd server must be available"
+}
+
+function get_workercount() {
+    [ -z ${WORKER_COUNT} ] && error "missing WORKER_COUNT environment variable"
+    sed -i '/worker_count = /c\worker_count = "'$WORKER_COUNT'"' ${TFVARS}
+}
+
+function prefligth_check() {
+    [ -z ${ENV} ] && error "missing ENV environment variable"
+    [ -z ${OS_USERNAME} ] && error "missing OS_USERNAME environment variable"
+    [ -z ${OS_PASSWORD} ] && error "missing OS_PASSWORD environment variable"
+    [ -z ${OS_AUTH_URL} ] && error "missing OS_AUTH_URL environment variable"
+    [ -z ${OS_PROJECT_ID} ] && error "missing OS_PROJECT_ID environment variable"
+    [ -z ${OS_USER_DOMAIN_NAME} ] && error "missing OS_USER_DOMAIN_NAME environment variable"
+
+    export TF_VAR_openstack_username=${OS_USERNAME}
+    export TF_VAR_openstack_password=${OS_PASSWORD}
+    export TF_VAR_openstack_auth_url=${OS_AUTH_URL}
+    export TF_VAR_openstack_tenant_id=${OS_PROJECT_ID}
+    export TF_VAR_openstack_domain_name=${OS_USER_DOMAIN_NAME}
+    export TF_VAR_cluster_name=${ENV}
+    export TFSTATE_KEY="opke/${ENV}/terraform"
+    export TFSTATE_FILE="${ROOT_DIR}/.terraform/terraform.tfstate"
+
+    command -v terraform >/dev/null 2>&1 || { echo >&2 "terraform is required but not installed.  Aborting."; exit 1; }
+    command -v kubectl >/dev/null 2>&1 || { echo >&2 "kubectl is required but not installed.  Aborting."; exit 1; }
+    command -v etcdctl >/dev/null 2>&1 || { echo >&2 "etcdctl is required but not installed.  Aborting."; exit 1; }
+}
+
+function prepare_workdir() {
+    rm -Rf ${ROOT_DIR}
+    mkdir -p ${ROOT_DIR}
+    pushd ${ROOT_DIR}
+}
+
+function clean_workdir() {
+    #rm -Rf ${ROOT_DIR}
+    sleep 1
+}
+
+function set_local_backend() {
+    sed -i '/backend "etcdv3" {}/c\  #backend "etcdv3" {}' ${DIR}/../modules/openstack/require.tf
+}
+
+function set_etcd_backend() {
+    sed -i '/#backend "etcdv3" {}/c\  backend "etcdv3" {}' ${DIR}/../modules/openstack/require.tf
+    cp ${ROOT_DIR}/terraform.tfstate ${ROOT_DIR}/../
+    cp ${ROOT_DIR}/id_rsa_core ${ROOT_DIR}/../
+    cp ${ROOT_DIR}/assets/bootkube/assets/auth/kubeconfig ${ROOT_DIR}/../
+}
+
+function export_kubeconfig() {
+    ETCDCTL_API=3 etcdctl --endpoints=http://$ETCD_IP:2379 put opke/${ENV}/kubeconfig "$(cat ${ROOT_DIR}/assets/bootkube/assets/auth/kubeconfig | base64)"
+}
+
+function import_kubeconfig() {
+    ETCDCTL_API=3 etcdctl --endpoints=http://$ETCD_IP:2379 get opke/${ENV}/kubeconfig --print-value-only=true | base64 --decode >> kubeconfig
+}
+
+function export_tfvars() {
+    ETCDCTL_API=3 etcdctl --endpoints=http://$ETCD_IP:2379 put opke/${ENV}/tfvars "$(cat ${TFVARS} | base64)"
+}
+
+function import_tfvars() {
+    ETCDCTL_API=3 etcdctl --endpoints=http://$ETCD_IP:2379 get opke/${ENV}/tfvars --print-value-only=true | base64 --decode >> ${ROOT_DIR}/${ENV}.tfvars
+    export TFVARS=${ROOT_DIR}/${ENV}.tfvars
+}
+
+function export_ssh() {
+    ETCDCTL_API=3 etcdctl --endpoints=http://$ETCD_IP:2379 put opke/${ENV}/ssh "$(cat ${ROOT_DIR}/id_rsa_core | base64)"
+}
+
+function import_ssh() {
+    ETCDCTL_API=3 etcdctl --endpoints=http://$ETCD_IP:2379 get opke/${ENV}/ssh --print-value-only=true | base64 --decode >> id_rsa_core
+}
+
+function init_local_terraform() {
+    terraform init -var-file=${TFVARS} $ROOT_DIR/../../modules/openstack
+}
+
+function init_remote_terraform() {
+    terraform init -var-file=${TFVARS} -force-copy -backend="true" -backend-config="lock=true" -backend-config="prefix=${TFSTATE_KEY}" -backend-config="endpoints=[\"${ETCD_IP}:2379\"]" ${ROOT_DIR}/../../modules/openstack
+}
+
+function apply_terraform() {
+    terraform apply -auto-approve -var-file=${TFVARS} $ROOT_DIR/../../modules/openstack
+}
+
+function destroy_terraform() {
+    terraform destroy -force
+}
+
+function pull_tfstate() {
+    terraform state pull >> ${ROOT_DIR}/terraform.tfstate
+}
+
+function get_etcd_service() {
+    until [ ! -z $(kubectl --kubeconfig ${ROOT_DIR}/assets/bootkube/assets/auth/kubeconfig -n=opke get svc opke-etcd-client-lb -o jsonpath='{.status.loadBalancer.ingress[0].ip}' 2> /dev/null) ]; do sleep 1; printf "."; done
+    export ETCD_IP=$(kubectl --kubeconfig ${ROOT_DIR}/assets/bootkube/assets/auth/kubeconfig -n=opke get svc opke-etcd-client-lb -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+}
+
+function clean_K8S_services() {
+    kubectl --kubeconfig ${ROOT_DIR}/kubeconfig delete --all namespaces
+}
+
 
 function tf_get_instance_id() {
 	local tfstatefile=${1}
@@ -60,17 +175,4 @@ function tf_get_all_instance_public_ips() {
 		return
 	fi
 	echo $ids
-}
-
-# Get the latest (by creation date) ami id with specified version tag value
-function get_ami_id_by_version() {
-	local ami_id=$(aws ec2 describe-images --filters "Name=tag:version,Values=${1}" --query 'Images[].[ImageId,CreationDate]' --output text | sort -n -k2 | head -1 | awk '{ print $1 }')
-	echo $ami_id
-}
-
-function delete_s3_object() {
-	# Ignore errors if file doesn't exists
-	set +e
-	aws s3 rm "s3://${1}/${2}"
-	set -e
 }

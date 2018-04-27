@@ -1,7 +1,8 @@
 apiVersion: "etcd.database.coreos.com/v1beta2"
 kind: "EtcdCluster"
 metadata:
-  name: "opke-etcd-cluster"
+  name: "opke-etcd"
+  namespace: opke
   ## Adding this annotation make this cluster managed by clusterwide operators
   ## namespaced operators ignore it
   annotations:
@@ -17,5 +18,5 @@ spec:
                 matchExpressions:
                 - key: etcd_cluster
                   operator: In
-                  values: ["$cluster_name"]
+                  values: ["opke-etcd"]
               topologyKey: kubernetes.io/hostname
