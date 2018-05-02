@@ -7,13 +7,15 @@ export ROOT_DIR="${DIR}/../tmp/${ENV}"
 
 source ${DIR}/utils.sh
 
-prefligth_check
+preflight_check
 
 case ${1} in
 	"bootstrap")
+        prepare_workdir
         get_flavor
         get_workercount
-        prepare_workdir
+        get_host_cidr
+        get_kube_version
         set_local_backend
         init_local_terraform
         apply_terraform
@@ -27,10 +29,12 @@ case ${1} in
         clean_workdir
 		;;
 	"create")
-        get_flavor
         get_etcd
-        get_workercount
         prepare_workdir
+        get_flavor
+        get_workercount
+        get_host_cidr
+        get_kube_version
         set_etcd_backend
         init_remote_terraform
         apply_terraform
@@ -40,20 +44,27 @@ case ${1} in
         clean_workdir
 		;;
     "scale")
-        get_workercount
         get_etcd
         prepare_workdir
-        set_etcd_backend
         import_tfvars
+        set_etcd_backend
+        get_workercount
         init_remote_terraform
         apply_terraform
         export_tfvars
         clean_workdir
         ;;
 	"upgrade")
-	    export KUBE_VERSION="${2}"
-		${DIR}/upgrade.sh
-		;;
+        get_etcd
+        prepare_workdir
+        set_etcd_backend
+        import_tfvars
+        get_kube_version
+        init_remote_terraform
+        apply_rolling_terraform
+        export_tfvars
+        clean_workdir
+        ;;
 	"delete")
         get_etcd
         prepare_workdir
