@@ -1,4 +1,4 @@
-Terraform automation to manage Kubernetes clusters on premise (currently Openstack only tested)
+Kubernetes as a Service for on premise deployments (currently Openstack only tested)
 
 # Functionalities
 
@@ -14,7 +14,17 @@ Terraform automation to manage Kubernetes clusters on premise (currently Opensta
   * Cinder storage class (for Openstack deployment)
   * Openstack LBaaS service type (for Openstack deployment)
 
-# Openstack requirements
+# Requirements
+
+This service requires the following tools to be installed on the management environment
+* terraform
+* kubectl
+* etcdctl
+
+
+# Usage on Openstack
+
+## Requirements
 
 * Openstack components:
   * Nova for compute nodes
@@ -23,28 +33,20 @@ Terraform automation to manage Kubernetes clusters on premise (currently Opensta
   * Cinder for K8S storage class integration
 * Internet access from your Openstack to download Kubernetes Hyperkube docker images
 
-# Usage on Openstack
 
 ## Creation
 
-1. Ensure you meet all the requirements
+1. Ensure you have installed the required tools on the management environment
 1. Source your Openstack rc file downloaded from Horizon webUI
-2. Copy the `env/example` directory to `env/<YOUR_ENV_NAME>`
-3. Go in `env/<YOUR_ENV_NAME>` and change variables according to your openstack context and disared options
-4. Initialize Terraform with `terraform init ../../openstack`
-5. Run the terraform with
+2. Customize the flavors files in `scripts/flavors` to match your openstack context
+3. Create a bootstrap cluster named `admin` that will be used to manage all the other clusters
 
-`TF_VAR_openstack_username=$OS_USERNAME \`
+`>ENV=admin ./scripts/run bootstrap <flavor>`
 
-`TF_VAR_openstack_password=$OS_PASSWORD \`
+5. Wait for the script to terminate
+6. You can now provision as many clusters as you want
+`>ENV=<cluster_name> ./scripts/run create <flavor>`
 
-`TF_VAR_openstack_auth_url=$OS_AUTH_URL \`
-
-`TF_VAR_openstack_tenant_id=$OS_PROJECT_ID \`
-
-`TF_VAR_openstack_domain_name=$OS_USER_DOMAIN_NAME \`
-
-`terraform apply ../../modules/openstack/`
 
 ## Scale in/out
 
