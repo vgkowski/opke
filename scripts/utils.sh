@@ -132,7 +132,8 @@ function export_kubeconfig() {
 
 function import_kubeconfig() {
     printf "importing KUBECONFIG from ETCD backend...    "
-    ETCDCTL_API=3 etcdctl --endpoints=http://$ETCD_IP:2379 get opke/${ENV}/kubeconfig --print-value-only=true | base64 --decode >> kubeconfig
+    ETCDCTL_API=3 etcdctl --endpoints=http://$ETCD_IP:2379 get opke/${ENV}/kubeconfig --print-value-only=true | base64 --decode > kubeconfig
+    printf "    OK\n"
 }
 
 function export_tfvars() {
@@ -142,18 +143,22 @@ function export_tfvars() {
 
 function import_tfvars() {
     printf "importing TFVARS from ETCD backend...    "
-    ETCDCTL_API=3 etcdctl --endpoints=http://$ETCD_IP:2379 get opke/${ENV}/tfvars --print-value-only=true | base64 --decode >> ${ROOT_DIR}/${ENV}.tfvars
+    ETCDCTL_API=3 etcdctl --endpoints=http://$ETCD_IP:2379 get opke/${ENV}/tfvars --print-value-only=true | base64 --decode > ${ROOT_DIR}/${ENV}.tfvars
     export TFVARS=${ROOT_DIR}/${ENV}.tfvars
+    printf "    OK\n"
 }
 
 function export_ssh() {
     printf "exporting SSH keys in ETCD backend...    "
     ETCDCTL_API=3 etcdctl --endpoints=http://$ETCD_IP:2379 put opke/${ENV}/ssh "$(cat ${ROOT_DIR}/id_rsa_core | base64)"
+    cp ${ROOT_DIR}/id_rsa_core ../
 }
 
 function import_ssh() {
     printf "importing SSH keys from ETCD backend...    "
-    ETCDCTL_API=3 etcdctl --endpoints=http://$ETCD_IP:2379 get opke/${ENV}/ssh --print-value-only=true | base64 --decode >> id_rsa_core
+    ETCDCTL_API=3 etcdctl --endpoints=http://$ETCD_IP:2379 get opke/${ENV}/ssh --print-value-only=true | base64 --decode > ${ROOT_DIR}/id_rsa_core
+    chmod 0600 ${ROOT_DIR}/id_rsa_core
+    printf "    OK\n"
 }
 
 function init_local_terraform() {
@@ -184,70 +189,53 @@ function get_etcd_service() {
 }
 
 function clean_K8S_services() {
-    printf "Cleaning K8S external services"
-    NAMESPACES=$(kubectl --kubeconfig ${ROOT_DIR}/kubeconfig get namespaces | grep -v 'kube-system\|kube-public\|default\|NAME' | awk '{print $1}' | xargs)
+    printf "Cleaning K8S external services\n"
+    NAMESPACES=$(kubectl --kubeconfig ${ROOT_DIR}/kubeconfig get --no-headers namespaces | grep -v 'kube-system\|kube-public\|default' | awk '{print $1}' | xargs)
     [ -z "$NAMESPACES" ] || kubectl --kubeconfig ${ROOT_DIR}/kubeconfig delete namespaces $NAMESPACES
-    ATTEMPTS=6 with_backoff $([ -z $(kubectl --kubeconfig ${ROOT_DIR}/kubeconfig get namespaces | grep -v 'kube-system\|kube-public\|default\|NAME' | awk '{print $1}' | xargs) ] || exit 1)
+    ATTEMPTS=6 with_backoff $([ -z $(kubectl --kubeconfig ${ROOT_DIR}/kubeconfig get --no-headers namespaces | grep -v 'kube-system\|kube-public\|default' | awk '{print $1}' | xargs) ] || exit 1)
+}
+
+function cordon_node() {
+    printf "Cordoning node $1..."
+    kubectl --kubeconfig ${ROOT_DIR}/kubeconfig cordon $1
     printf "    OK\n"
 }
 
-
-
-
-
-
-
-
-function tf_get_instance_id() {
-	local tfstatefile=${1}
-	local instance=${2}
-	local id
-	id=$(cat ${tfstatefile} | jq -e -r -M '.modules[0].resources."aws_instance.'"${instance}"'".primary.id')
-	if [ $? -ne 0 ]; then
-		# if someone has tainted the resource try with tainted instead of primary
-		id=$(cat ${tfstatefile} | jq -e -r -M '.modules[0].resources."aws_instance.'"${instance}"'".tainted[0].id')
-		if [ $? -ne 0 ]; then
-			echo ""
-			return
-		fi
-	fi
-	echo $id
+function uncordon_node() {
+    printf "Uncordoning node $1..."
+    kubectl --kubeconfig ${ROOT_DIR}/kubeconfig uncordon $1
+    printf "    OK\n"
 }
 
-function tf_get_instance_public_ip() {
-	local tfstatefile=${1}
-	local instance=${2}
-	local ip
-	ip=$(cat ${tfstatefile} | jq -e -r -M '.modules[0].resources."aws_instance.'"${instance}"'".primary.attributes.public_ip')
-	if [ $? -ne 0 ]; then
-		# if someone has tainted the resource try with tainted instead of primary
-		ip=$(cat ${tfstatefile} | jq -e -r -M '.modules[0].resources."aws_instance.'"${instance}"'".tainted[0].attributes.public_ip')
-		if [ $? -ne 0 ]; then
-			echo ""
-			return
-		fi
-	fi
-	echo $ip
+function drain_node() {
+    printf "Draining node $1..."
+    kubectl --kubeconfig ${ROOT_DIR}/kubeconfig drain my-node
+    printf "    OK\n"
 }
 
-function tf_get_all_instance_ids() {
-	local tfstatefile=${1}
-	local ids
-	ids=$(cat ${tfstatefile} | jq -c -e -r -M '.modules[0].resources | to_entries | map(select(.key | test("aws_instance\\..*"))) | map(.value.primary.id)')
-	if [ $? -ne 0 ]; then
-		echo ""
-		return
-	fi
-	echo $ids
+function ready_node() {
+    printf "Waiting node $1 to become ready..."
+    with_backoff $(kubectl --kubeconfig ${ROOT_DIR}/kubeconfig get --no-headers node $1 | awk '{print $2}' | grep -q "Ready")
+    printf "    OK\n"
 }
 
-function tf_get_all_instance_public_ips() {
-	local tfstatefile=${1}
-	local ids
-	ids=$(cat ${tfstatefile} | jq -c -e -r -M '.modules[0].resources | to_entries | map(select(.key | test("aws_instance\\..*"))) | map(.value.primary.attributes.public_ip)')
-	if [ $? -ne 0 ]; then
-		echo ""
-		return
-	fi
-	echo $ids
+function apply_rolling_terraform() {
+    local controllers=(`kubectl --kubeconfig kubeconfig get nodes | grep controller | awk '{print $1}'`)
+    local workers=(`kubectl --kubeconfig kubeconfig get nodes | grep worker | awk '{print $1}'`)
+
+    terraform apply -target=module.bootkube -auto-approve -var-file=${TFVARS} ${ROOT_DIR}/../../modules/openstack
+    for id in ${controllers[@]}; do
+        cordon_node $id
+        drain_node $id
+        terraform apply -target=null_resource.kubelet_controller[$id] -auto-approve -var-file=${TFVARS} ${ROOT_DIR}/../../modules/openstack
+        ready_node $id
+        uncordon_node $id
+    done
+    for id in ${controllers[@]}; do
+        cordon_node $id
+        drain_node $id
+        terraform apply -target=null_resource.kubelet_worker[$id] -auto-approve -var-file=${TFVARS} ${ROOT_DIR}/../../modules/openstack
+        ready_node $id
+        uncordon_node $id
+    done
 }

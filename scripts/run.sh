@@ -61,7 +61,7 @@ case ${1} in
         import_tfvars
         get_kube_version
         init_remote_terraform
-        apply_rolling_terraform
+        apply_terraform
         export_tfvars
         clean_workdir
         ;;
