@@ -7,13 +7,11 @@ function error() {
 	exit 1
 }
 
-
 function with_backoff {
   local max_attempts=${ATTEMPTS-5}
   local timeout=${TIMEOUT-1}
-  local attempt=1
+  local attempt=0
   local exitCode=0
-
   while (( $attempt < $max_attempts ))
   do
     if "$@"
@@ -22,21 +20,17 @@ function with_backoff {
     else
       exitCode=$?
     fi
-
     echo "Failure! Retrying in $timeout.." 1>&2
     sleep $timeout
     attempt=$(( attempt + 1 ))
     timeout=$(( timeout * 2 ))
   done
-
   if [[ $exitCode != 0 ]]
   then
     echo "Exponential backoff failed! ($@)" 1>&2
   fi
-
-  return $exitCode
+  error "with_backoff: $exitCode $@"
 }
-
 
 function get_flavor() {
     printf "checking the FLAVOR..."
@@ -56,8 +50,8 @@ function get_kube_version() {
 
 function get_etcd() {
     printf "checking backend ETCD..."
-    [ -z ${ETCD_IP} ] && error "missing ETCD_IP environment variable"
-    with_backoff $(ETCDCTL_API=3 etcdctl --endpoints=http://$ETCD_IP:2379 member list >/dev/null 2>&1 || error "etcd server must be available")
+    [ ! -z ${ETCD_IP} ] || error "missing ETCD_IP environment variable"
+    ETCDCTL_API=3 with_backoff etcdctl --endpoints=http://$ETCD_IP:2379 member list
     printf "    OK\n"
 }
 
@@ -130,6 +124,12 @@ function export_kubeconfig() {
     ETCDCTL_API=3 etcdctl --endpoints=http://$ETCD_IP:2379 put opke/${ENV}/kubeconfig "$(cat ${ROOT_DIR}/assets/bootkube/assets/auth/kubeconfig | base64)"
 }
 
+function backup_kubeconfig() {
+    printf "backuping KUBECONFIG in $HOME    "
+    cp ${ROOT_DIR}/assets/bootkube/assets/auth/kubeconfig $HOME
+    printf "    OK\n"
+}
+
 function import_kubeconfig() {
     printf "importing KUBECONFIG from ETCD backend...    "
     ETCDCTL_API=3 etcdctl --endpoints=http://$ETCD_IP:2379 get opke/${ENV}/kubeconfig --print-value-only=true | base64 --decode > kubeconfig
@@ -151,7 +151,6 @@ function import_tfvars() {
 function export_ssh() {
     printf "exporting SSH keys in ETCD backend...    "
     ETCDCTL_API=3 etcdctl --endpoints=http://$ETCD_IP:2379 put opke/${ENV}/ssh "$(cat ${ROOT_DIR}/id_rsa_core | base64)"
-    cp ${ROOT_DIR}/id_rsa_core ../
 }
 
 function import_ssh() {
@@ -178,21 +177,33 @@ function destroy_terraform() {
 }
 
 function pull_tfstate() {
-    terraform state pull >> ${ROOT_DIR}/terraform.tfstate
+    ETCDCTL_API=3 etcdctl --endpoints=http://${ETCD_IP}:2379 get opke/${ENV}/terraformdefault --print-value-only=true > terraform.tfstate
 }
 
 function get_etcd_service() {
     printf "waiting for opke etcd service to be ready..."
-    with_backoff $([ ! -z $(kubectl --kubeconfig ${ROOT_DIR}/assets/bootkube/assets/auth/kubeconfig -n=opke get svc opke-etcd-client-lb -o jsonpath='{.status.loadBalancer.ingress[0].ip}' 2> /dev/null) ] || exit 1)
+    ATTEMPTS=7 with_backoff kctl_etcd_ip
     export ETCD_IP=$(kubectl --kubeconfig ${ROOT_DIR}/assets/bootkube/assets/auth/kubeconfig -n=opke get svc opke-etcd-client-lb -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
     printf "    OK\n"
+}
+
+function kctl_etcd_ip() {
+    [ ! -z $(kubectl --kubeconfig ${ROOT_DIR}/assets/bootkube/assets/auth/kubeconfig -n=opke get svc opke-etcd-client-lb -o jsonpath='{.status.loadBalancer.ingress[0].ip}' 2> /dev/null) ] || return 1
+}
+
+function kctl_empty_namespaces() {
+    [ -z $(kubectl --kubeconfig ${ROOT_DIR}/kubeconfig get --no-headers namespaces | grep -v 'kube-system\|kube-public\|default' | awk '{print $1}' | xargs) ] || return 1
+}
+
+function kctl_ready_node() {
+    [ ! -z $(kubectl --kubeconfig ${ROOT_DIR}/kubeconfig get --no-headers node $1 | awk '{print $2}' | grep -q "Ready") ] || return 1
 }
 
 function clean_K8S_services() {
     printf "Cleaning K8S external services\n"
     NAMESPACES=$(kubectl --kubeconfig ${ROOT_DIR}/kubeconfig get --no-headers namespaces | grep -v 'kube-system\|kube-public\|default' | awk '{print $1}' | xargs)
     [ -z "$NAMESPACES" ] || kubectl --kubeconfig ${ROOT_DIR}/kubeconfig delete namespaces $NAMESPACES
-    ATTEMPTS=6 with_backoff $([ -z $(kubectl --kubeconfig ${ROOT_DIR}/kubeconfig get --no-headers namespaces | grep -v 'kube-system\|kube-public\|default' | awk '{print $1}' | xargs) ] || exit 1)
+    ATTEMPTS=7 with_backoff kctl_empty_namespaces
 }
 
 function cordon_node() {
@@ -209,13 +220,13 @@ function uncordon_node() {
 
 function drain_node() {
     printf "Draining node $1..."
-    kubectl --kubeconfig ${ROOT_DIR}/kubeconfig drain my-node
+    kubectl --kubeconfig ${ROOT_DIR}/kubeconfig drain $1
     printf "    OK\n"
 }
 
 function ready_node() {
     printf "Waiting node $1 to become ready..."
-    with_backoff $(kubectl --kubeconfig ${ROOT_DIR}/kubeconfig get --no-headers node $1 | awk '{print $2}' | grep -q "Ready")
+    with_backoff kctl_ready_node $1
     printf "    OK\n"
 }
 

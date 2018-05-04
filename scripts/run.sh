@@ -2,7 +2,7 @@
 
 set -e
 
-export DIR="$(readlink -f $(dirname ${0}))"
+export DIR="$(cd "$(dirname "$0")" && pwd -P)"
 export ROOT_DIR="${DIR}/../tmp/${ENV}"
 
 source ${DIR}/utils.sh
@@ -24,6 +24,7 @@ case ${1} in
         set_etcd_backend
         init_remote_terraform
         export_kubeconfig
+        backup_kubeconfig
         export_tfvars
         export_ssh
         clean_workdir
@@ -68,6 +69,7 @@ case ${1} in
 	"delete")
         get_etcd
         prepare_workdir
+        set_etcd_backend
 		import_kubeconfig
 		import_tfvars
         init_remote_terraform

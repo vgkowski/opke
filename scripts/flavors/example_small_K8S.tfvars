@@ -38,3 +38,5 @@ G/pGTcPk1PJmrQNbyupE3U42lLkwAm0huOoLLIClm5YfIvlt5hTFizIQFmuC34Fu
 /fj2jv/Gig2Qi3Y=
 -----END CERTIFICATE-----
 EOF
+
+kubernetes_version = "v1.9.5"
