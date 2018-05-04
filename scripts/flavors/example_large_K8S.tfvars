@@ -1,4 +1,3 @@
-cluster_name = "opke-example-large"
 openstack_dns_zone = "example-zone"
 
 controller_count = "3"

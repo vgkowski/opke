@@ -1,6 +1,6 @@
 # Terraform version and plugin versions
 terraform {
-  #backend "etcdv3" {}
+  backend "etcdv3" {}
   required_version = ">= 0.10.4"
 }
 
