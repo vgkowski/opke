@@ -203,7 +203,7 @@ function clean_K8S_services() {
     printf "Cleaning K8S external services\n"
     NAMESPACES=$(kubectl --kubeconfig ${ROOT_DIR}/kubeconfig get --no-headers namespaces | grep -v 'kube-system\|kube-public\|default' | awk '{print $1}' | xargs)
     [ -z "$NAMESPACES" ] || kubectl --kubeconfig ${ROOT_DIR}/kubeconfig delete namespaces $NAMESPACES
-    ATTEMPTS=7 with_backoff kctl_empty_namespaces
+    ATTEMPTS=10 with_backoff kctl_empty_namespaces
 }
 
 function cordon_node() {
