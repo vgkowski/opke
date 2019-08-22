@@ -1,4 +1,4 @@
-Kubernetes as a Service for on premise deployments (currently Openstack only tested)
+Kubernetes as a Service for Openstack
 
 # Functionalities
 
